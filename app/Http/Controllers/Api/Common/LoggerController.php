@@ -11,7 +11,7 @@ class LoggerController extends Controller
 {
     use ApiResponse;
 
-    public function getAll(Request $request)
+    public function index(Request $request)
     {
         $loggers = Logger::latest()->paginate($request->per_page ?? 50);
         return $this->successResponse($loggers);
