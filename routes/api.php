@@ -9,34 +9,24 @@ use App\Http\Controllers\Api\Common\SubscribeController;
 use App\Http\Controllers\Api\Common\PermissionController;
 use App\Http\Controllers\Api\Common\LoggerController;
 use App\Http\Controllers\Api\Common\PotentialCustomerController;
-use App\Http\Controllers\Api\CompanyAdmin\Company\FloorController;
-use App\Http\Controllers\Api\CompanyAdmin\Company\AreaController;
-use App\Http\Controllers\Api\CompanyAdmin\Company\ElementController;
-use App\Http\Controllers\Api\CompanyAdmin\Company\TaskController;
-use App\Http\Controllers\Api\CompanyAdmin\Company\JobDefController;
 use App\Http\Controllers\Api\CompanyAdmin\Customer\CustomerController;
 use App\Http\Controllers\Api\CompanyAdmin\Customer\QuotationController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\CategoryController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\SubcategoryController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\MaterialController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\SupplierController;
+use App\Http\Controllers\Api\CompanyAdmin\Material\DistributorController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\MaterialOrderController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\JobController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectMaterialAssignmentController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\StaffRoleController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\StaffController;
-use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\ShiftController;
-use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\EmploymentAgencyController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\DesignationController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\SupervisorController;
 use App\Http\Controllers\Api\CompanyAdmin\Work\WorkPlanController;
 use App\Http\Controllers\Api\CompanyAdmin\Work\WorkCheckController;
 use App\Http\Controllers\Api\CompanyAdmin\Dashboard\DashboardController;
-use App\Http\Controllers\Api\CompanyAdmin\Method\MethodController;
-use App\Http\Controllers\Api\CompanyAdmin\Method\SafetyMethodController;
-use App\Http\Controllers\Api\CompanyAdmin\Method\MethodCategoryController;
-use App\Http\Controllers\Api\CompanyAdmin\Method\MethodSafetyCategoryController;
 use App\Http\Controllers\Api\CompanyAdmin\Report\QualityReportController;
 use App\Http\Controllers\Api\CompanyAdmin\Report\WorkerReportController;
 use App\Http\Controllers\Api\CompanyAdmin\Report\ProjectReportController;
@@ -78,13 +68,6 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     // Dashboard
     Route::get('dashboard/counts', [DashboardController::class, 'counts']);
 
-    // Company Setup
-    Route::apiResource('floor', FloorController::class);
-    Route::apiResource('area', AreaController::class);
-    Route::apiResource('element', ElementController::class);
-    Route::apiResource('task', TaskController::class);
-    Route::apiResource('job_def', JobDefController::class);
-
     // Customer
     Route::apiResource('customer', CustomerController::class);
 
@@ -103,6 +86,10 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
 
     // Suppliers
     Route::apiResource('supplier', SupplierController::class);
+
+    // Distributors
+    Route::get('distributor/supplier/{supplierId}', [DistributorController::class, 'bySupplier']);
+    Route::apiResource('distributor', DistributorController::class);
 
     // Material Orders
     Route::put('material-order/{id}/status', [MaterialOrderController::class, 'updateStatus']);
@@ -129,15 +116,8 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     Route::apiResource('staff-role', StaffRoleController::class);
 
     // Staff
-    Route::get('staff/job-types-agencies', [StaffController::class, 'jobTypesAgencies']);
     Route::get('staff/check-username/{username}', [StaffController::class, 'checkUsername']);
     Route::apiResource('staff', StaffController::class);
-
-    // Shift
-    Route::apiResource('shift', ShiftController::class);
-
-    // Employment Agencies
-    Route::apiResource('employment-agencies', EmploymentAgencyController::class);
 
     // Designation
     Route::apiResource('designation', DesignationController::class);
@@ -167,18 +147,6 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     Route::get('check/worker-records', [WorkCheckController::class, 'workerRecords']);
     Route::get('check/worker-stats', [WorkCheckController::class, 'workerStats']);
     Route::put('check/fix-incomplete-checkout', [WorkCheckController::class, 'fixIncompleteCheckout']);
-
-    // Method
-    Route::apiResource('method', MethodController::class);
-
-    // Safety Method
-    Route::apiResource('safety/method', SafetyMethodController::class);
-
-    // Method Category
-    Route::apiResource('method-category', MethodCategoryController::class);
-
-    // Method Safety Category
-    Route::apiResource('safety/method-category', MethodSafetyCategoryController::class);
 
     // Worker Reports
     Route::get('worker-reports', [WorkerReportController::class, 'index']);

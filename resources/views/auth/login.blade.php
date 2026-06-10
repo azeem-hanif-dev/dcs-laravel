@@ -4,7 +4,7 @@
 @section('title', 'Login - Digital Clean Solution')
 
 @section('content')
-<div class="flex h-screen overflow-hidden bg-[#0f1524]" x-data="{ 
+<div class="flex h-screen overflow-hidden bg-[#0f172a]" x-data="{ 
     step: 1, 
     showPassword: false, 
     loading: false, 
@@ -19,9 +19,9 @@
     forgotMsg: ''
 }">
     {{-- Left Side - Form --}}
-    <div class="w-full lg:w-1/2 bg-[#1a1e2e] flex flex-col h-full">
+    <div class="w-full lg:w-1/2 bg-[#1e293b] flex flex-col h-full">
         <div class="flex-1 flex items-center justify-center">
-            <div class="max-w-md w-full p-8 rounded-xl bg-[#252a3d] shadow-lg">
+            <div class="max-w-md w-full p-8 rounded-xl bg-[#1e3a5f] shadow-lg">
                 <div class="flex justify-center mb-6">
                     <img src="/common/Logo.svg" alt="Logo" class="h-16 w-auto" />
                 </div>
@@ -46,7 +46,7 @@
                         <div class="mb-6">
                             <label class="block text-gray-300 text-sm font-sans mb-2">Company Name</label>
                             <input type="text" x-model="companyName" required
-                                class="w-full px-3 bg-[#1a1e2e] text-white py-3 border border-[#3a3f50] rounded-md focus:outline-none focus:ring-1 focus:ring-[#00ff85]"
+                                class="w-full px-3 bg-[#1e293b] text-white py-3 border border-[#334155] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
                                 placeholder="Enter your company name" autofocus />
                         </div>
                         <button type="submit" :disabled="loading"
@@ -62,7 +62,7 @@
                 <div x-show="step === 2" x-transition>
                     <div class="flex items-center mb-4">
                         <button @click="step = 1; errorMsg = ''"
-                            class="text-gray-400 hover:text-white mr-3 p-1 rounded-md hover:bg-[#1a1e2e]">
+                            class="text-gray-400 hover:text-white mr-3 p-1 rounded-md hover:bg-[#1e293b]">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                         </button>
                         <div>
@@ -90,14 +90,14 @@
                         <div class="mb-4">
                             <label class="block text-gray-300 text-sm font-sans mb-2">Username</label>
                             <input type="text" x-model="username" required
-                                class="w-full px-3 bg-[#1a1e2e] text-white py-3 border border-[#3a3f50] rounded-md focus:outline-none focus:ring-1 focus:ring-[#00ff85]"
+                                class="w-full px-3 bg-[#1e293b] text-white py-3 border border-[#334155] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
                                 placeholder="Username" autofocus />
                         </div>
                         <div class="mb-4">
                             <label class="block text-gray-300 text-sm font-sans mb-2">Password</label>
                             <div class="relative">
                                 <input :type="showPassword ? 'text' : 'password'" x-model="password" required
-                                    class="w-full px-3 bg-[#1a1e2e] text-white py-3 border border-[#3a3f50] rounded-md focus:outline-none focus:ring-1 focus:ring-[#00ff85]"
+                                    class="w-full px-3 bg-[#1e293b] text-white py-3 border border-[#334155] rounded-md focus:outline-none focus:ring-1 focus:ring-[#3B82F6]"
                                     placeholder="Password" />
                                 <button type="button" @click="showPassword = !showPassword"
                                     class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200">

@@ -7,9 +7,9 @@
 
 @theme {
     --font-sans: 'Urbanist', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --color-primary: #00A86B;
-    --color-primary-dark: #008F5A;
-    --color-primary-light: #00C17D;
+    --color-primary: #1E40AF;
+    --color-primary-dark: #1E3A8A;
+    --color-primary-light: #3B82F6;
 }
 
 /* Urbanist as default */

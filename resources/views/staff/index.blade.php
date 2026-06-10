@@ -139,34 +139,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Agency</label>
-                        <select x-model="form.agency_id"
-                            class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
-                            <option value="">Select Agency</option>
-                            <template x-for="ag in agencies" :key="ag.id">
-                                <option :value="ag.id" x-text="ag.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
                         <select x-model="form.job_type_id"
                             class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                             <option value="">Select Job Type</option>
                             <template x-for="jt in jobTypes" :key="jt.id">
                                 <option :value="jt.id" x-text="jt.name || jt.title || ''"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Shift</label>
-                        <select x-model="form.shift_id"
-                            class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
-                            <option value="">Select Shift</option>
-                            <template x-for="sh in shifts" :key="sh.id">
-                                <option :value="sh.id" x-text="sh.title"></option>
                             </template>
                         </select>
                     </div>
@@ -228,9 +206,7 @@
 function staffData() {
     return {
         items: [],
-        agencies: [],
         jobTypes: [],
-        shifts: [],
         designations: ['Admin','Manager','Supervisor','Worker','Operator','Technician','Cleaner','Driver','Security','Other'],
         search: '',
         currentPage: 1,
@@ -241,7 +217,7 @@ function staffData() {
         deleteModalOpen: false,
         isEditing: false,
         saving: false,
-        form: { id: null, name: '', username: '', email: '', employee_code: '', phone: '', designation: '', agency_id: '', job_type_id: '', shift_id: '', gender: '', password: '', visa_expiry: '', health_expiry: '', passport_expiry: '' },
+        form: { id: null, name: '', username: '', email: '', employee_code: '', phone: '', designation: '', job_type_id: '', gender: '', password: '', visa_expiry: '', health_expiry: '', passport_expiry: '' },
         errors: {},
         deleteId: null,
 
@@ -254,7 +230,7 @@ function staffData() {
         },
 
         async init() {
-            await Promise.all([this.fetchAgencies(), this.fetchShifts()]);
+            await this.fetchJobTypes();
             this.fetchItems();
         },
 
@@ -275,31 +251,20 @@ function staffData() {
             } catch (e) { console.error('Fetch error:', e); }
         },
 
-        async fetchAgencies() {
+        async fetchJobTypes() {
             try {
                 let token = localStorage.getItem('S_S_Token');
-                let res = await fetch('/api/v1/employment-agencies?per_page=100', {
+                let res = await fetch('/api/v1/staff-role?per_page=100', {
                     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
                 });
                 let data = await res.json();
-                this.agencies = data.data?.data || data.data || [];
-            } catch (e) { console.error('Agencies fetch error:', e); }
-        },
-
-        async fetchShifts() {
-            try {
-                let token = localStorage.getItem('S_S_Token');
-                let res = await fetch('/api/v1/shift?per_page=100', {
-                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-                });
-                let data = await res.json();
-                this.shifts = data.data?.data || data.data || [];
-            } catch (e) { console.error('Shifts fetch error:', e); }
+                this.jobTypes = data.data?.data || data.data || [];
+            } catch (e) { console.error('Job types fetch error:', e); }
         },
 
         openAddModal() {
             this.isEditing = false;
-            this.form = { id: null, name: '', username: '', email: '', employee_code: '', phone: '', designation: '', agency_id: '', job_type_id: '', shift_id: '', gender: '', password: '', visa_expiry: '', health_expiry: '', passport_expiry: '' };
+            this.form = { id: null, name: '', username: '', email: '', employee_code: '', phone: '', designation: '', job_type_id: '', gender: '', password: '', visa_expiry: '', health_expiry: '', passport_expiry: '' };
             this.errors = {};
             this.modalOpen = true;
         },
@@ -314,9 +279,7 @@ function staffData() {
                 employee_code: item.employee_code || '',
                 phone: item.phone || '',
                 designation: item.designation || '',
-                agency_id: item.agency_id || '',
                 job_type_id: item.job_type_id || '',
-                shift_id: item.shift_id || '',
                 gender: item.gender || '',
                 password: '',
                 visa_expiry: item.visa_expiry || '',

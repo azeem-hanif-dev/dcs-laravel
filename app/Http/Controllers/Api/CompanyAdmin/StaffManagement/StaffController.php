@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api\CompanyAdmin\StaffManagement;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
 use App\Models\StaffManagement\Staff;
-use App\Models\StaffManagement\StaffRole;
-use App\Models\StaffManagement\EmploymentAgency;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +15,7 @@ class StaffController extends Controller
     public function index(Request $request)
     {
         $staff = Staff::where('company_id', $request->company_id)
-            ->with(['agency', 'jobType', 'shift'])
+            ->with(['jobType'])
             ->latest()->get();
         return $this->successResponse($staff);
     }
@@ -31,9 +29,7 @@ class StaffController extends Controller
             'employeeCode' => 'nullable|string',
             'phone' => 'nullable|string',
             'designation' => 'required|string',
-            'agencyId' => 'nullable|exists:employment_agencies,id',
             'jobTypeId' => 'nullable|exists:staff_roles,id',
-            'shiftId' => 'nullable|exists:shifts,id',
             'permission' => 'nullable|array',
             'gender' => 'nullable|string',
             'visaExpiry' => 'nullable|date',
@@ -45,9 +41,7 @@ class StaffController extends Controller
         $data['user_id'] = $request->auth_user->id;
         $data['company_id'] = $request->company_id;
         if (isset($data['employeeCode'])) { $data['employee_code'] = $data['employeeCode']; unset($data['employeeCode']); }
-        if (isset($data['agencyId'])) { $data['agency_id'] = $data['agencyId']; unset($data['agencyId']); }
         if (isset($data['jobTypeId'])) { $data['job_type_id'] = $data['jobTypeId']; unset($data['jobTypeId']); }
-        if (isset($data['shiftId'])) { $data['shift_id'] = $data['shiftId']; unset($data['shiftId']); }
         if (isset($data['visaExpiry'])) { $data['visa_expiry'] = $data['visaExpiry']; unset($data['visaExpiry']); }
         if (isset($data['healthExpiry'])) { $data['health_expiry'] = $data['healthExpiry']; unset($data['healthExpiry']); }
         if (isset($data['passportExpiry'])) { $data['passport_expiry'] = $data['passportExpiry']; unset($data['passportExpiry']); }
@@ -60,7 +54,7 @@ class StaffController extends Controller
     public function show(Request $request, $id)
     {
         $worker = Staff::where('company_id', $request->company_id)
-            ->with(['agency', 'jobType', 'shift'])
+            ->with(['jobType'])
             ->findOrFail($id);
         return $this->successResponse($worker);
     }
@@ -75,9 +69,7 @@ class StaffController extends Controller
             'employeeCode' => 'nullable|string',
             'phone' => 'nullable|string',
             'designation' => 'sometimes|string',
-            'agencyId' => 'nullable|exists:employment_agencies,id',
             'jobTypeId' => 'nullable|exists:staff_roles,id',
-            'shiftId' => 'nullable|exists:shifts,id',
             'permission' => 'nullable|array',
             'gender' => 'nullable|string',
             'visaExpiry' => 'nullable|date',
@@ -86,9 +78,7 @@ class StaffController extends Controller
             'mobileSignup' => 'nullable|boolean',
         ]);
         if (isset($data['employeeCode'])) { $data['employee_code'] = $data['employeeCode']; unset($data['employeeCode']); }
-        if (isset($data['agencyId'])) { $data['agency_id'] = $data['agencyId']; unset($data['agencyId']); }
         if (isset($data['jobTypeId'])) { $data['job_type_id'] = $data['jobTypeId']; unset($data['jobTypeId']); }
-        if (isset($data['shiftId'])) { $data['shift_id'] = $data['shiftId']; unset($data['shiftId']); }
         if (isset($data['visaExpiry'])) { $data['visa_expiry'] = $data['visaExpiry']; unset($data['visaExpiry']); }
         if (isset($data['healthExpiry'])) { $data['health_expiry'] = $data['healthExpiry']; unset($data['healthExpiry']); }
         if (isset($data['passportExpiry'])) { $data['passport_expiry'] = $data['passportExpiry']; unset($data['passportExpiry']); }
@@ -102,13 +92,6 @@ class StaffController extends Controller
         $worker = Staff::where('company_id', $request->company_id)->findOrFail($id);
         $worker->delete();
         return $this->successResponse(null, 'Staff deleted successfully');
-    }
-
-    public function jobTypesAgencies(Request $request)
-    {
-        $jobTypes = StaffRole::where('company_id', $request->company_id)->get();
-        $agencies = EmploymentAgency::where('company_id', $request->company_id)->get();
-        return $this->successResponse(['jobTypes' => $jobTypes, 'agencies' => $agencies]);
     }
 
     public function checkUsername(Request $request, $username)
