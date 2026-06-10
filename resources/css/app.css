@@ -25,6 +25,31 @@ body { font-family: 'Urbanist', sans-serif; }
 .modal-backdrop { backdrop-filter: blur(2px); }
 .sidebar-transition { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 
+/* White logo filter (for dark backgrounds) */
+.logo-white { filter: brightness(0) saturate(100%) invert(1); }
+
+/* Logo pulse animation */
+@keyframes logo-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.9; }
+}
+.animate-logo-pulse { animation: logo-pulse 1.8s ease-in-out infinite; }
+
+/* Floating animation for right-side background logo */
+@keyframes logo-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    33% { transform: translateY(-6px) scale(1.03); }
+    66% { transform: translateY(4px) scale(0.98); }
+}
+.animate-logo-float { animation: logo-float 6s ease-in-out infinite; }
+
+/* Fade-in for step transitions */
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+
 /* Responsive table: horizontal scroll container */
 .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-responsive table { min-width: 600px; }

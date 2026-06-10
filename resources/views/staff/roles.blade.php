@@ -66,7 +66,7 @@
         </div>
 
         <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="total > perPage">
-            <span class="text-xs text-gray-500">Page {{currentPage}} of {{totalPages}} ({{total}} total)</span>
+            <span class="text-xs text-gray-500">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span> (<span x-text="total"></span> total)</span>
             <div class="flex gap-1">
                 <button @click="changePage(1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
                 <button @click="changePage(currentPage-1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>

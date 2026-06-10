@@ -118,7 +118,6 @@
 
     {{-- Footer --}}
     <div class="py-6 px-6 flex flex-col items-center border-t border-gray-200 text-xs font-light text-primary">
-        <p class="mb-2">DS.DCS.AP.1.00</p>
         <a href="https://www.softwicks.com/" target="_blank" class="text-gray-700 hover:text-gray-900 text-sm">
             Powered By Digital Stationz
         </a>

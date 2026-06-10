@@ -12,7 +12,8 @@ use App\Http\Controllers\Web\PageController;
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout.post');
 
 // Company Admin routes (require auth via session)
 Route::middleware(['web.auth'])->prefix('company_admin')->group(function () {
