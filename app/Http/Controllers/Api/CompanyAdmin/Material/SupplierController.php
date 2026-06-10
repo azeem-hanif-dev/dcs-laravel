@@ -13,8 +13,8 @@ class SupplierController extends Controller
 
     public function index(Request $request)
     {
-        $suppliers = Supplier::where('company_id', $request->company_id)->latest()->get();
-        return $this->successResponse($suppliers);
+        $query = Supplier::where('company_id', $request->company_id)->latest();
+        return $this->paginatedResponse($query, $request, 'Suppliers retrieved');
     }
 
     public function store(Request $request)

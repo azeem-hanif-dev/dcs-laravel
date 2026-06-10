@@ -14,10 +14,10 @@ class MaterialOrderController extends Controller
 
     public function index(Request $request)
     {
-        $orders = MaterialOrder::where('company_id', $request->company_id)
+        $query = MaterialOrder::where('company_id', $request->company_id)
             ->with('items.material', 'items.supplier', 'orderedBy')
-            ->latest()->get();
-        return $this->successResponse($orders);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Orders retrieved');
     }
 
     public function store(Request $request)

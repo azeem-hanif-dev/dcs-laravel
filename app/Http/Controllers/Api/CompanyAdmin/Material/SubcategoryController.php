@@ -17,7 +17,7 @@ class SubcategoryController extends Controller
         if ($request->categoryId) {
             $query->where('category_id', $request->categoryId);
         }
-        return $this->successResponse($query->with('category')->latest()->get());
+        return $this->paginatedResponse($query->with('category')->latest(), $request, 'Subcategories retrieved');
     }
 
     public function store(Request $request)

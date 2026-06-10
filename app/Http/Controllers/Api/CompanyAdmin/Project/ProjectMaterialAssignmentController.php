@@ -13,10 +13,10 @@ class ProjectMaterialAssignmentController extends Controller
 
     public function index(Request $request)
     {
-        $assignments = ProjectMaterialAssignment::whereHas('project', function ($q) use ($request) {
+        $query = ProjectMaterialAssignment::whereHas('project', function ($q) use ($request) {
             $q->where('company_id', $request->company_id);
-        })->with(['project', 'material', 'worker'])->latest()->get();
-        return $this->successResponse($assignments);
+        })->with(['project', 'material', 'worker'])->latest();
+        return $this->paginatedResponse($query, $request, 'Assignments retrieved');
     }
 
     public function store(Request $request)

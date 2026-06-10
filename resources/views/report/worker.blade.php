@@ -14,7 +14,7 @@
         <div class="p-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-3 flex-wrap">
             <div class="relative flex-1 min-w-[200px]">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input type="text" x-model="search" @input.debounce.300="fetchData()" placeholder="Search by worker name..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                <input type="text" x-model="search" @input.debounce.300="fetchData()" placeholder="Search by worker name..." class="w-full pl-10 pr-4 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
             </div>
             <select x-model="workerFilter" @change="fetchData()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
                 <option value="">All Workers</option>
@@ -35,7 +35,7 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+                <thead class="table-header-branded uppercase text-xs tracking-wider">
                     <tr>
                         <th class="px-4 py-3">Sr. No</th>
                         <th class="px-4 py-3">Worker</th>
@@ -191,9 +191,22 @@ function workerReportData() {
             this.loading = true;
             try {
                 let params = { page: this.currentPage, per_page: this.perPage, search: this.search, worker_id: this.workerFilter, date_from: this.dateFrom, date_to: this.dateTo, status: this.statusFilter };
-                let data = await $store.api.get('/api/v1/worker-reports', params);
-                this.items = data.data || []; this.totalItems = data.total || data.meta?.total || 0; this.currentPage = data.current_page || data.meta?.current_page || 1; this.perPage = data.per_page || data.meta?.per_page || 10; this.totalPages = data.last_page || data.meta?.last_page || 1;
-            } catch(e) { $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
+                let resp = await $store.api.get('/api/v1/worker-reports', params);
+                if (resp && resp.status) {
+                    let payload = resp.data;
+                    if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
+                        this.items = payload.data;
+                        this.totalItems = payload.total || 0;
+                        this.currentPage = payload.current_page || 1;
+                        this.perPage = payload.per_page || 10;
+                        this.totalPages = payload.last_page || 1;
+                    } else {
+                        this.items = Array.isArray(payload) ? payload : [];
+                        this.totalItems = this.items.length;
+                        this.totalPages = Math.ceil(this.totalItems / this.perPage) || 1;
+                    }
+                }
+            } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
         async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 'all' }); this.workers = data.data || []; } catch(e) {} },
 

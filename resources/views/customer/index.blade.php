@@ -20,13 +20,13 @@
     </div>
 
     {{-- Filter card --}}
-    <div class="bg-white rounded-xl shadow-sm p-3 mb-4 border border-gray-100">
+    <div class="bg-white rounded-xl shadow-sm p-2.5 mb-3 border border-gray-100">
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300ms="currentPage=1; fetchItems()"
                     placeholder="Search customers..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
+                    class="w-full pl-9 pr-4 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
             </div>
             <button @click="search=''; currentPage=1; fetchItems()"
                 class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">Clear</button>
@@ -37,7 +37,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="table-responsive">
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="table-header-branded">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
@@ -90,18 +90,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="total > perPage">
-            <span class="text-xs text-gray-500" x-text="'Page ' + currentPage + ' of ' + totalPages + ' (' + total + ' total)'"></span>
-            <div class="flex gap-1">
-                <button @click="changePage(1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
-                <button @click="changePage(currentPage-1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>
-                <template x-for="p in visiblePages" :key="p">
-                    <button @click="changePage(p)" :class="p===currentPage?'bg-primary text-white border-primary':'border-gray-200 hover:bg-gray-50'" class="px-2.5 py-1.5 text-xs rounded-lg border" x-text="p"></button>
-                </template>
-                <button @click="changePage(currentPage+1)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-                <button @click="changePage(totalPages)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Last</button>
-            </div>
-        </div>
+        @include('components.pagination-footer', ['prefix' => ''])
     </div>
 
     {{-- Add/Edit Modal --}}
@@ -198,14 +187,15 @@
 function customerData(){return{
     items:[],search:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,form:{name:'',email:'',phone:'',countryCode:'',country:'',city:'',address:'',contactPerson1:'',contactPerson2:'',password:''},errors:{},
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
-    async fetchItems(){this.loading=true;try{var d=await $store.api.get('/api/v1/customer',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}}catch(e){$store.toast.error('Failed to load customers')}this.loading=false},
+    async fetchItems(){this.loading=true;try{var d=await $store.api.get('/api/v1/customer',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];$store.toast.error('Failed to load customers')}finally{this.loading=false}},
     openAddModal(){this.editId=null;this.errors={};this.form={name:'',email:'',phone:'',countryCode:'',country:'',city:'',address:'',contactPerson1:'',contactPerson2:'',password:''};this.modalOpen=true},
     openEditModal(c){this.editId=c.id;this.errors={};this.form={name:c.name||'',email:c.email||'',phone:c.phone||'',countryCode:c.country_code||c.countryCode||'',country:c.country||'',city:c.city||'',address:c.address||'',contactPerson1:c.contact_person1||c.contactPerson1||'',contactPerson2:c.contact_person2||c.contactPerson2||'',password:''};this.modalOpen=true},
     openDeleteModal(c){this.deleteTarget=c;this.deleteModalOpen=true},
     closeModal(){this.modalOpen=false;this.editId=null;this.errors={}},
     async saveCustomer(){this.errors={};var n=this.form.name,e=this.form.email,p=this.form.phone,cc=this.form.countryCode,co=this.form.country;if(!n){this.errors.name='Name is required';return}if(!e){this.errors.email='Email is required';return}if(!p){this.errors.phone='Phone is required';return}if(!cc){this.errors.countryCode='Country code is required';return}if(!co){this.errors.country='Country is required';return}if(!this.editId&&!this.form.password){this.errors.password='Password is required';return}this.saving=true;var body={name:n,email:e,phone:p,countryCode:cc,country:co,city:this.form.city||'',address:this.form.address||'',contactPerson1:this.form.contactPerson1||'',contactPerson2:this.form.contactPerson2||''};if(!this.editId)body.password=this.form.password;try{if(this.editId){await $store.api.put('/api/v1/customer/'+this.editId,body)}else{await $store.api.post('/api/v1/customer',body)}this.closeModal();$store.toast.success(this.editId?'Customer updated':'Customer created');this.fetchItems()}catch(err){if(err.errors)this.errors=err.errors;else $store.toast.error(err.message||'Save failed');this.saving=false}},
     async deleteCustomer(){if(!this.deleteTarget)return;this.saving=true;try{await $store.api.del('/api/v1/customer/'+this.deleteTarget.id);this.deleteModalOpen=false;this.deleteTarget=null;$store.toast.success('Customer deleted');this.fetchItems()}catch(e){$store.toast.error(e.message||'Delete failed')}this.saving=false},
-    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}}
+    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},
+    changePerPage(n){n=parseInt(n);if(!n||n===this.perPage)return;this.perPage=n;this.currentPage=1;this.fetchItems()}
 }}
 </script>
 @endpush

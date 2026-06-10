@@ -18,8 +18,7 @@ class AdminController extends Controller
         if ($request->company_id) {
             $query->where('company_id', $request->company_id);
         }
-        $admins = $query->latest()->get();
-        return $this->successResponse($admins);
+        return $this->paginatedResponse($query->latest(), $request, 'Admins retrieved');
     }
 
     public function store(Request $request)

@@ -13,8 +13,8 @@ class StaffRoleController extends Controller
 
     public function index(Request $request)
     {
-        $roles = StaffRole::where('company_id', $request->company_id)->latest()->get();
-        return $this->successResponse($roles);
+        $query = StaffRole::where('company_id', $request->company_id)->latest();
+        return $this->paginatedResponse($query, $request, 'Staff roles retrieved');
     }
 
     public function store(Request $request)

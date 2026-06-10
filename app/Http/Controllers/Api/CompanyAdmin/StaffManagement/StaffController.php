@@ -14,10 +14,10 @@ class StaffController extends Controller
 
     public function index(Request $request)
     {
-        $staff = Staff::where('company_id', $request->company_id)
+        $query = Staff::where('company_id', $request->company_id)
             ->with(['jobType'])
-            ->latest()->get();
-        return $this->successResponse($staff);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Staff retrieved');
     }
 
     public function store(Request $request)

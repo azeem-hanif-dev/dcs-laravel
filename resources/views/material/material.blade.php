@@ -20,13 +20,13 @@
     </div>
 
     {{-- Filter card --}}
-    <div class="bg-white rounded-xl shadow-sm p-3 mb-4 border border-gray-100">
+    <div class="bg-white rounded-xl shadow-sm p-2.5 mb-3 border border-gray-100">
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300ms="currentPage=1; fetchItems()"
                     placeholder="Search materials..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
+                    class="w-full pl-9 pr-4 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
             </div>
             <select x-model="filterCategoryId" @change="currentPage=1; fetchItems()"
                 class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
@@ -50,7 +50,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="table-responsive">
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="table-header-branded">
                     <tr>
                         <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                         <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
@@ -107,18 +107,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="total > perPage">
-            <span class="text-xs text-gray-500" x-text="'Page ' + currentPage + ' of ' + totalPages + ' (' + total + ' total)'"></span>
-            <div class="flex gap-1">
-                <button @click="changePage(1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
-                <button @click="changePage(currentPage-1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>
-                <template x-for="p in visiblePages" :key="p">
-                    <button @click="changePage(p)" :class="p===currentPage?'bg-primary text-white border-primary':'border-gray-200 hover:bg-gray-50'" class="px-2.5 py-1.5 text-xs rounded-lg border" x-text="p"></button>
-                </template>
-                <button @click="changePage(currentPage+1)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-                <button @click="changePage(totalPages)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Last</button>
-            </div>
-        </div>
+        @include('components.pagination-footer', ['prefix' => ''])
     </div>
 
     {{-- Add/Edit Modal --}}
@@ -228,7 +217,7 @@ function materialData(){return{
     items:[],categories:[],subcategories:[],suppliers:[],search:'',filterCategoryId:'',filterStatus:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,form:{id:null,materialName:'',categoryId:'',subcategoryId:'',price:'',totalQuantity:'',assignedQuantity:'',status:'',uses:'',supplierId:'',description:''},errors:{},deleteId:null,
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
     async init(){await Promise.all([this.fetchCategories(),this.fetchSuppliers()]);this.fetchItems()},
-    async fetchItems(){this.loading=true;try{var d=await $store.api.get('/api/v1/material',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined,categoryId:this.filterCategoryId||undefined,status:this.filterStatus||undefined});if(d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}}catch(e){$store.toast.error('Failed to load materials')}this.loading=false},
+    async fetchItems(){this.loading=true;try{var d=await $store.api.get('/api/v1/material',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined,categoryId:this.filterCategoryId||undefined,status:this.filterStatus||undefined});if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];$store.toast.error('Failed to load materials')}finally{this.loading=false}},
     async fetchCategories(){try{var d=await $store.api.get('/api/v1/category',{per_page:100});this.categories=d.data?.data||d.data||[]}catch(e){}},
     async fetchSubcategories(){if(!this.form.categoryId){this.subcategories=[];return};try{var d=await $store.api.get('/api/v1/subcategory',{categoryId:this.form.categoryId,per_page:100});this.subcategories=d.data?.data||d.data||[]}catch(e){}},
     async fetchSuppliers(){try{var d=await $store.api.get('/api/v1/supplier',{per_page:100});this.suppliers=d.data?.data||d.data||[]}catch(e){}},
@@ -238,7 +227,8 @@ function materialData(){return{
     async saveItem(){this.errors={};if(!this.form.materialName){this.errors.materialName='Material name is required';return};this.saving=true;try{if(this.isEditing){await $store.api.put('/api/v1/material/'+this.form.id,this.form)}else{await $store.api.post('/api/v1/material',this.form)};this.closeModal();$store.toast.success(this.isEditing?'Material updated':'Material created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else $store.toast.error(e.message||'Save failed')}this.saving=false},
     confirmDelete(item){this.deleteId=item.id;this.deleteModalOpen=true},
     async deleteItem(){this.saving=true;try{await $store.api.del('/api/v1/material/'+this.deleteId);this.deleteModalOpen=false;$store.toast.success('Material deleted');this.fetchItems()}catch(e){$store.toast.error(e.message||'Delete failed')}this.saving=false},
-    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}}
+    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},
+    changePerPage(n){n=parseInt(n);if(!n||n===this.perPage)return;this.perPage=n;this.currentPage=1;this.fetchItems()}
 }}
 </script>
 @endpush

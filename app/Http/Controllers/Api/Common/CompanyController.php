@@ -13,8 +13,8 @@ class CompanyController extends Controller
 
     public function index(Request $request)
     {
-        $companies = Company::where('is_delete', false)->latest()->get();
-        return $this->successResponse($companies);
+        $query = Company::where('is_delete', false)->latest();
+        return $this->paginatedResponse($query, $request, 'Companies retrieved');
     }
 
     public function store(Request $request)

@@ -15,9 +15,10 @@ class QuotationController extends Controller
 
     public function index(Request $request)
     {
-        $quotations = Quotation::where('company_id', $request->company_id)
+        $query = Quotation::where('company_id', $request->company_id)
             ->with('quoteDetails.worker')
-            ->latest()->get();
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Quotations retrieved');
         return $this->successResponse($quotations);
     }
 

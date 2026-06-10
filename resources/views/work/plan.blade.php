@@ -20,15 +20,18 @@
     </div>
 
     {{-- Filter card --}}
-    <div class="bg-white rounded-xl shadow-sm p-3 mb-4 border border-gray-100">
-        <div class="flex flex-col sm:flex-row gap-3">
-            <div class="relative flex-1">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 mb-3">
+        <div class="flex flex-col sm:flex-row items-stretch gap-2">
+            <div class="relative max-w-xs w-full">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300ms="doSearch()"
                     placeholder="Search work plans..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
+                    class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
             </div>
-            <button @click="search=''; doSearch()" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">Clear</button>
+            <button @click="search=''; doSearch()"
+                class="text-xs text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+                Clear
+            </button>
         </div>
     </div>
 
@@ -36,33 +39,41 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="table-responsive">
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="table-header-branded">
                     <tr>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Project</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Job</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Worker</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Type</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Actions</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">Project</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Job</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">Worker</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Type</th>
+                        <th class="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                        <th class="px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider w-28">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
+                    {{-- Loading state --}}
                     <template x-if="pager.loading">
-                        <tr><td colspan="7" class="px-6 py-16 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <svg class="spinner w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                                <span class="text-sm text-gray-400">Loading...</span>
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <svg class="spinner w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-400">Loading data...</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Please wait a moment</p>
+                                </div>
                             </div>
                         </td></tr>
                     </template>
+                    {{-- Empty state --}}
                     <template x-if="!pager.loading && pager.items.length === 0">
-                        <tr><td colspan="7" class="px-6 py-16 text-center">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                            <p class="text-gray-500 font-medium">No work plans found</p>
-                            <p class="text-sm text-gray-400 mt-1">Assign workers to projects</p>
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="max-w-sm mx-auto">
+                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                <h3 class="text-base font-semibold text-gray-400 mb-1">No Work Plans Found</h3>
+                                <p class="text-sm text-gray-400" x-text="search ? 'Try adjusting your search' : 'Click Add Work Plan to create one'"></p>
+                            </div>
                         </td></tr>
                     </template>
+                    {{-- Data rows --}}
                     <template x-for="(item, index) in pager.items" :key="item.id">
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-3 py-3 text-sm text-gray-500 whitespace-nowrap" data-label="#" x-text="(pager.currentPage - 1) * pager.perPage + index + 1"></td>
@@ -104,24 +115,13 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="pager.totalPages > 1">
-            <span class="text-xs text-gray-500" x-text="'Showing ' + ((pager.currentPage - 1) * pager.perPage + 1) + '-' + Math.min(pager.currentPage * pager.perPage, pager.total) + ' of ' + pager.total"></span>
-            <div class="flex gap-1">
-                <button @click="pager.goToPage(1)" :disabled="pager.currentPage === 1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
-                <button @click="pager.goToPage(pager.currentPage - 1)" :disabled="pager.currentPage === 1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>
-                <template x-for="page in pager.visiblePages()" :key="page">
-                    <button @click="pager.goToPage(page)" :class="pager.currentPage === page ? 'bg-primary text-white border-primary' : 'border-gray-200 hover:bg-gray-50'" class="px-2.5 py-1.5 text-xs rounded-lg border" x-text="page"></button>
-                </template>
-                <button @click="pager.goToPage(pager.currentPage + 1)" :disabled="pager.currentPage === pager.totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-                <button @click="pager.goToPage(pager.totalPages)" :disabled="pager.currentPage === pager.totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Last</button>
-            </div>
-        </div>
+        @include('components.pagination-footer', ['prefix' => 'pager.'])
     </div>
 
     {{-- Add/Edit Modal --}}
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" x-transition.opacity>
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10">
+    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" x-transition.opacity @keydown.escape.window="closeModal()">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="closeModal()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10" @click.outside="closeModal()">
             <div class="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">
                 <h3 class="text-lg font-semibold text-gray-800" x-text="editId ? 'Edit Work Plan' : 'Add Work Plan'"></h3>
                 <button @click="closeModal()" class="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
@@ -214,20 +214,14 @@
     </div>
 
     {{-- Delete Confirmation Modal --}}
-    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="deleteModalOpen = false"></div>
-        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10 text-center">
-            <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Confirm Delete</h3>
-            <p class="text-sm text-gray-500 mb-5">Are you sure you want to delete this work plan?</p>
-            <div class="flex justify-center gap-3">
-                <button @click="deleteModalOpen = false" class="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancel</button>
-                <button @click="deleteItem()" :disabled="saving" class="px-5 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors disabled:opacity-50">Delete</button>
-            </div>
-        </div>
-    </div>
+    @include('components.delete-modal', [
+        'show' => 'deleteModalOpen',
+        'title' => 'Confirm Delete',
+        'itemName' => 'deleteTarget?.name',
+        'onConfirm' => 'deleteItem()',
+        'onCancel' => 'deleteModalOpen = false',
+        'saving' => 'saving'
+    ])
 
 </div>
 @endsection
@@ -235,17 +229,17 @@
 @push('scripts')
 <script>
 function workPlanData(){return{
-    pager:$store.pager.create({endpoint:'/api/v1/work',perPage:10}),projects:[],jobs:[],workers:[],search:'',saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,dayOptions:[{value:'mon',label:'Mon'},{value:'tue',label:'Tue'},{value:'wed',label:'Wed'},{value:'thu',label:'Thu'},{value:'fri',label:'Fri'},{value:'sat',label:'Sat'},{value:'sun',label:'Sun'}],form:{projectId:'',jobId:'',workerId:'',jobType:'',days:[],weeks:'',date:'',status:''},errors:{},
-    async init(){await this.fetchDependencies();await this.pager.fetchPage()},
-    doSearch(){this.pager.currentPage=1;this.pager.fetchPage({search:this.search})},
-    async fetchDependencies(){try{var pd=await $store.api.get('/api/v1/project',{per_page:200});var sd=await $store.api.get('/api/v1/staff',{per_page:200});if(pd.status)this.projects=Array.isArray(pd.data)?pd.data:(pd.data?.data||pd.data||[]);if(sd.status)this.workers=Array.isArray(sd.data)?sd.data:(sd.data?.data||sd.data||[])}catch(e){$store.toast.error('Failed to load dependencies')}},
-    async fetchJobs(pid){this.jobs=[];if(!pid)return;try{var d=await $store.api.get('/api/v1/job/project/'+pid);if(d.status)this.jobs=Array.isArray(d.data)?d.data:(d.data?.data||d.data||[])}catch(e){$store.toast.error('Failed to load jobs')}},
+    pager:{loading:true,items:[],currentPage:1,perPage:10,total:0,totalPages:1,get visiblePages(){return[]},fetchPage(){return Promise.resolve(false)},setSearch(){},refresh(){return Promise.resolve(false)},goToPage(){},changePerPage(){}},projects:[],jobs:[],workers:[],search:'',saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,dayOptions:[{value:'mon',label:'Mon'},{value:'tue',label:'Tue'},{value:'wed',label:'Wed'},{value:'thu',label:'Thu'},{value:'fri',label:'Fri'},{value:'sat',label:'Sat'},{value:'sun',label:'Sun'}],form:{projectId:'',jobId:'',workerId:'',jobType:'',days:[],weeks:'',date:'',status:''},errors:{},
+    async init(){try{this.pager=$store.pager.create({endpoint:'/api/v1/work',perPage:10})}catch(e){console.error('Pager create failed:',e);this.pager.loading=false;return}this.fetchDependencies();this.pager.fetchPage()},
+    doSearch(){try{this.pager.setSearch({search:this.search||undefined})}catch(e){this.search=''}},
+    async fetchDependencies(){try{var pd=await $store.api.get('/api/v1/project',{per_page:200});var sd=await $store.api.get('/api/v1/staff',{per_page:200});if(pd&&pd.status)this.projects=Array.isArray(pd.data)?pd.data:(pd.data?.data||[]);if(sd&&sd.status)this.workers=Array.isArray(sd.data)?sd.data:(sd.data?.data||[])}catch(e){console.error('Failed to load work plan dependencies:',e)}},
+    async fetchJobs(pid){this.jobs=[];if(!pid)return;try{var d=await $store.api.get('/api/v1/job/project/'+pid);if(d&&d.status)this.jobs=Array.isArray(d.data)?d.data:(d.data?.data||[])}catch(e){console.error('Failed to load jobs:',e)}},
     openAddModal(){this.editId=null;this.errors={};this.jobs=[];this.form={projectId:'',jobId:'',workerId:'',jobType:'',days:[],weeks:'',date:'',status:''};this.modalOpen=true},
     openEditModal(item){this.editId=item.id;this.errors={};this.jobs=[];this.form={projectId:item.project_id||item.projectId||'',jobId:item.job_id||item.jobId||'',workerId:item.worker_id||item.workerId||'',jobType:item.job_type||'',days:Array.isArray(item.days)?item.days:(item.days?item.days.split(','):[]),weeks:Array.isArray(item.weeks)?item.weeks.join(','):(item.weeks||''),date:item.date||'',status:item.status||''};if(this.form.projectId)this.fetchJobs(this.form.projectId);this.modalOpen=true},
     closeModal(){this.modalOpen=false;this.editId=null;this.errors={}},
-    async saveItem(){this.errors={};var p=this.form.projectId,j=this.form.jobId,w=this.form.workerId,jt=this.form.jobType,dt=this.form.date;if(!p){this.errors.projectId='Project is required';return}if(!j){this.errors.jobId='Job is required';return}if(!w){this.errors.workerId='Worker is required';return}if(!jt){this.errors.jobType='Job type is required';return}if(!dt){this.errors.date='Date is required';return}this.saving=true;var body={...this.form,weeks:this.form.weeks?this.form.weeks.split(',').map(function(s){return s.trim()}).filter(Boolean):[]};try{var d=this.editId?await $store.api.put('/api/v1/work/'+this.editId,body):await $store.api.post('/api/v1/work',body);if(d.status){this.closeModal();$store.toast.success(this.editId?'Work plan updated':'Work plan created');this.pager.fetchPage()}else{$store.toast.error(d.message||'Save failed')}}catch(e){$store.toast.error(e.message||'Save failed')}this.saving=false},
+    async saveItem(){this.errors={};var p=this.form.projectId,j=this.form.jobId,w=this.form.workerId,jt=this.form.jobType,dt=this.form.date;if(!p){this.errors.projectId='Project is required';return}if(!j){this.errors.jobId='Job is required';return}if(!w){this.errors.workerId='Worker is required';return}if(!jt){this.errors.jobType='Job type is required';return}if(!dt){this.errors.date='Date is required';return}this.saving=true;var body={projectId:this.form.projectId,jobId:this.form.jobId,workerId:this.form.workerId,jobType:this.form.jobType,days:this.form.days,weeks:this.form.weeks?this.form.weeks.split(',').map(function(s){return s.trim()}).filter(Boolean):[],date:this.form.date,status:this.form.status||'active'};try{var d=this.editId?await $store.api.put('/api/v1/work/'+this.editId,body):await $store.api.post('/api/v1/work',body);if(d.status){this.closeModal();$store.toast.success(this.editId?'Work plan updated':'Work plan created');this.pager.refresh()}else{$store.toast.error(d.message||'Save failed')}}catch(e){$store.toast.error(e.message||'Save failed')}finally{this.saving=false}},
     confirmDelete(item){this.deleteTarget=item;this.deleteModalOpen=true},
-    async deleteItem(){if(!this.deleteTarget)return;this.saving=true;try{await $store.api.del('/api/v1/work/'+this.deleteTarget.id);this.deleteModalOpen=false;this.deleteTarget=null;$store.toast.success('Work plan deleted');this.pager.fetchPage()}catch(e){$store.toast.error(e.message||'Delete failed')}this.saving=false}
+    async deleteItem(){if(!this.deleteTarget)return;this.saving=true;try{await $store.api.del('/api/v1/work/'+this.deleteTarget.id);this.deleteModalOpen=false;this.deleteTarget=null;$store.toast.success('Work plan deleted');this.pager.refresh()}catch(e){$store.toast.error(e.message||'Delete failed')}finally{this.saving=false}}
 }}
 </script>
 @endpush

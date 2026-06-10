@@ -17,8 +17,7 @@ class WorkerReportController extends Controller
         if ($request->workerId) {
             $query->where('worker_id', $request->workerId);
         }
-        $reports = $query->latest()->get();
-        return $this->successResponse($reports);
+        return $this->paginatedResponse($query->latest(), $request, 'Worker reports retrieved');
     }
 
     public function update(Request $request, $checkId)

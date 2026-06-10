@@ -14,10 +14,10 @@ class WorkPlanController extends Controller
 
     public function index(Request $request)
     {
-        $workPlans = WorkPlan::where('company_id', $request->company_id)
+        $query = WorkPlan::where('company_id', $request->company_id)
             ->with(['project', 'job', 'worker'])
-            ->latest()->get();
-        return $this->successResponse($workPlans);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Work plans retrieved');
     }
 
     public function store(Request $request)

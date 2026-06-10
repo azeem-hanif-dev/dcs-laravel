@@ -13,9 +13,9 @@ class MaterialController extends Controller
 
     public function index(Request $request)
     {
-        $materials = Material::where('company_id', $request->company_id)
-            ->with(['category', 'subcategory', 'supplier'])->latest()->get();
-        return $this->successResponse($materials);
+        $query = Material::where('company_id', $request->company_id)
+            ->with(['category', 'subcategory', 'supplier'])->latest();
+        return $this->paginatedResponse($query, $request, 'Materials retrieved');
     }
 
     public function store(Request $request)

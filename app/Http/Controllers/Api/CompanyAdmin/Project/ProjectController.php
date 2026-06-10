@@ -15,10 +15,10 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
-        $projects = Project::where('company_id', $request->company_id)
+        $query = Project::where('company_id', $request->company_id)
             ->with(['customer', 'supervisor'])
-            ->latest()->get();
-        return $this->successResponse($projects);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Projects retrieved');
     }
 
     public function store(Request $request)

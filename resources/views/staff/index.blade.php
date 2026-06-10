@@ -18,12 +18,12 @@
         </button>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm p-3 mb-4 border border-gray-100">
+    <div class="bg-white rounded-xl shadow-sm p-2.5 mb-3 border border-gray-100">
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300ms="currentPage=1;fetchItems()" placeholder="Search staff..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
+                    class="w-full pl-9 pr-4 py-1.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
             </div>
             <button @click="search=''; currentPage=1; fetchItems()" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">Clear</button>
         </div>
@@ -32,7 +32,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="table-responsive">
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="table-header-branded">
                     <tr>
                         <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                         <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
@@ -74,18 +74,7 @@
             </table>
         </div>
 
-        <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="total > perPage">
-            <span class="text-xs text-gray-500">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span> (<span x-text="total"></span> total)</span>
-            <div class="flex gap-1">
-                <button @click="changePage(1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
-                <button @click="changePage(currentPage-1)" :disabled="currentPage===1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>
-                <template x-for="p in visiblePages" :key="p">
-                    <button @click="changePage(p)" :class="p===currentPage ? 'bg-primary text-white border-primary' : 'border-gray-200 hover:bg-gray-50'" class="px-2.5 py-1.5 text-xs rounded-lg border"><span x-text="p"></span></button>
-                </template>
-                <button @click="changePage(currentPage+1)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-                <button @click="changePage(totalPages)" :disabled="currentPage===totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Last</button>
-            </div>
-        </div>
+        @include('components.pagination-footer', ['prefix' => ''])
     </div>
 
     {{-- Add/Edit Modal --}}
@@ -201,14 +190,15 @@ function staffData(){return{
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
     async init(){await this.fetchJobTypes();this.fetchItems()},
     async fetchJobTypes(){try{var d=await Alpine.store('api').get('/api/v1/staff-role',{per_page:100});this.jobTypes=d.data?.data||d.data||[]}catch(e){}},
-    async fetchItems(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/staff',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}}catch(e){Alpine.store('toast').error('Failed to load staff')}this.loading=false},
+    async fetchItems(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/staff',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load staff')}finally{this.loading=false}},
     openAddModal(){this.editId=null;this.errors={};this.form={name:'',username:'',email:'',employeeCode:'',phone:'',designation:'',jobTypeId:'',gender:'',visaExpiry:'',healthExpiry:'',passportExpiry:'',password:''};this.modalOpen=true},
     openEditModal(s){this.editId=s.id;this.errors={};this.form={name:s.name||'',username:s.username||'',email:s.email||'',employeeCode:s.employee_code||s.employeeCode||'',phone:s.phone||'',designation:s.designation||'',jobTypeId:s.job_type_id||s.jobTypeId||'',gender:s.gender||'',visaExpiry:s.visa_expiry||s.visaExpiry||'',healthExpiry:s.health_expiry||s.healthExpiry||'',passportExpiry:s.passport_expiry||s.passportExpiry||'',password:''};this.modalOpen=true},
     closeModal(){this.modalOpen=false;this.editId=null;this.errors={}},
     async saveItem(){this.errors={};if(!this.form.name){this.errors.name='Name is required';return}if(!this.form.username){this.errors.username='Username is required';return}if(!this.form.designation){this.errors.designation='Designation is required';return}if(!this.editId&&!this.form.password){this.errors.password='Password is required';return}this.saving=true;var body={name:this.form.name,username:this.form.username,email:this.form.email||'',employee_code:this.form.employeeCode||'',phone:this.form.phone||'',designation:this.form.designation,job_type_id:this.form.jobTypeId||'',gender:this.form.gender||'',visa_expiry:this.form.visaExpiry||'',health_expiry:this.form.healthExpiry||'',passport_expiry:this.form.passportExpiry||''};if(!this.editId)body.password=this.form.password;try{if(this.editId){await Alpine.store('api').put('/api/v1/staff/'+this.editId,body)}else{await Alpine.store('api').post('/api/v1/staff/store',body)}this.closeModal();Alpine.store('toast').success(this.editId?'Staff updated':'Staff created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
     confirmDelete(s){this.deleteTarget=s;this.deleteModalOpen=true},
     async deleteItem(){if(!this.deleteTarget)return;this.saving=true;try{await Alpine.store('api').del('/api/v1/staff/'+this.deleteTarget.id);this.deleteModalOpen=false;this.deleteTarget=null;Alpine.store('toast').success('Staff deleted');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Delete failed')}this.saving=false},
-    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}}
+    changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},
+    changePerPage(n){n=parseInt(n);if(!n||n===this.perPage)return;this.perPage=n;this.currentPage=1;this.fetchItems()}
 }}
 </script>
 @endpush

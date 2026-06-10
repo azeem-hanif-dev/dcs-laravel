@@ -13,10 +13,10 @@ class QualityReportController extends Controller
 
     public function index(Request $request)
     {
-        $reports = QualityReport::where('company_id', $request->company_id)
+        $query = QualityReport::where('company_id', $request->company_id)
             ->with(['project', 'task', 'worker', 'reviewer'])
-            ->latest()->get();
-        return $this->successResponse($reports);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Quality reports retrieved');
     }
 
     public function store(Request $request)

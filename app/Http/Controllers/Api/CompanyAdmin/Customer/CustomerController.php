@@ -14,8 +14,8 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
-        $customers = Customer::where('company_id', $request->company_id)->latest()->get();
-        return $this->successResponse($customers);
+        $query = Customer::where('company_id', $request->company_id)->latest();
+        return $this->paginatedResponse($query, $request, 'Customers retrieved');
     }
 
     public function store(Request $request)

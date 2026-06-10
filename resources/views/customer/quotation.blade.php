@@ -20,15 +20,18 @@
     </div>
 
     {{-- Filter card --}}
-    <div class="bg-white rounded-xl shadow-sm p-3 mb-4 border border-gray-100">
-        <div class="flex flex-col sm:flex-row gap-3">
-            <div class="relative flex-1">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 mb-3">
+        <div class="flex flex-col sm:flex-row items-stretch gap-2">
+            <div class="relative max-w-xs w-full">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300ms="doSearch()"
                     placeholder="Search quotations..."
-                    class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none text-sm">
+                    class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
             </div>
-            <button @click="search=''; doSearch()" class="text-sm text-gray-500 hover:text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">Clear</button>
+            <button @click="search=''; doSearch()"
+                class="text-xs text-gray-500 hover:text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+                Clear
+            </button>
         </div>
     </div>
 
@@ -36,7 +39,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="table-responsive">
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+                <thead class="table-header-branded">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</th>
@@ -96,18 +99,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" x-show="pager.totalPages > 1">
-            <span class="text-xs text-gray-500" x-text="'Showing ' + ((pager.currentPage - 1) * pager.perPage + 1) + '-' + Math.min(pager.currentPage * pager.perPage, pager.total) + ' of ' + pager.total"></span>
-            <div class="flex gap-1">
-                <button @click="pager.goToPage(1)" :disabled="pager.currentPage === 1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">First</button>
-                <button @click="pager.goToPage(pager.currentPage - 1)" :disabled="pager.currentPage === 1" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Prev</button>
-                <template x-for="page in pager.visiblePages()" :key="page">
-                    <button @click="pager.goToPage(page)" :class="pager.currentPage === page ? 'bg-primary text-white border-primary' : 'border-gray-200 hover:bg-gray-50'" class="px-2.5 py-1.5 text-xs rounded-lg border" x-text="page"></button>
-                </template>
-                <button @click="pager.goToPage(pager.currentPage + 1)" :disabled="pager.currentPage === pager.totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Next</button>
-                <button @click="pager.goToPage(pager.totalPages)" :disabled="pager.currentPage === pager.totalPages" class="px-2.5 py-1.5 text-xs rounded-lg border border-gray-200 disabled:opacity-40 hover:bg-gray-50">Last</button>
-            </div>
-        </div>
+        @include('components.pagination-footer', ['prefix' => 'pager.'])
     </div>
 
     {{-- Add/Edit Modal --}}
@@ -202,9 +194,9 @@
 @push('scripts')
 <script>
 function quotationData(){return{
-    pager:$store.pager.create({endpoint:'/api/v1/qoutation',perPage:10}),search:'',saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,form:{companyname:'',date:'',validity:'',contactPerson:'',phone:'',type:'',grandtotal:'',address:''},errors:{},
-    async init(){await this.pager.fetchPage()},
-    doSearch(){this.pager.currentPage=1;this.pager.fetchPage({search:this.search})},
+    pager:{loading:true,items:[],currentPage:1,perPage:10,total:0,totalPages:1,get visiblePages(){return[]},fetchPage(){return Promise.resolve(false)},setSearch(){},refresh(){return Promise.resolve(false)},goToPage(){},changePerPage(){}},search:'',saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,form:{companyname:'',date:'',validity:'',contactPerson:'',phone:'',type:'',grandtotal:'',address:''},errors:{},
+    async init(){try{this.pager=$store.pager.create({endpoint:'/api/v1/qoutation',perPage:10})}catch(e){console.error('Pager create failed:',e);this.pager.loading=false;return}this.pager.fetchPage()},
+    doSearch(){try{this.pager.currentPage=1;this.pager.fetchPage({search:this.search})}catch(e){this.search=''}},
     openAddModal(){this.editId=null;this.errors={};this.form={companyname:'',date:'',validity:'',contactPerson:'',phone:'',type:'',grandtotal:'',address:''};this.modalOpen=true},
     openEditModal(i){this.editId=i.id;this.errors={};this.form={companyname:i.companyname||'',date:i.date||'',validity:i.validity||'',contactPerson:i.contact_person||i.contactPerson||'',phone:i.phone||'',type:i.type||'',grandtotal:i.grandtotal||'',address:i.address||''};this.modalOpen=true},
     openDeleteModal(i){this.deleteTarget=i;this.deleteModalOpen=true},

@@ -13,8 +13,8 @@ class DesignationController extends Controller
 
     public function index(Request $request)
     {
-        $designations = Designation::where('company_id', $request->company_id)->latest()->get();
-        return $this->successResponse($designations);
+        $query = Designation::where('company_id', $request->company_id)->latest();
+        return $this->paginatedResponse($query, $request, 'Designations retrieved');
     }
 
     public function store(Request $request)

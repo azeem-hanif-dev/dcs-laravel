@@ -13,7 +13,7 @@ Alpine.store('toast', {
         setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 300);
     },
     success(msg, d) { this.add('success', msg, d); },
-    error(msg, d) { this.add('error', msg, d || 5000); },
+    error(msg, d) { this.add('error', msg, d || 6000); },
     warning(msg, d) { this.add('warning', msg, d); },
     info(msg, d) { this.add('info', msg, d); }
 });
@@ -32,13 +32,27 @@ Alpine.store('api', {
         const config = { headers: this.headers(opts.isFormData), ...opts };
         delete config.isFormData;
         const res = await fetch(url, config);
-        const data = await res.json();
-        if (!res.ok) throw { status: res.status, ...data };
+        const text = await res.text();
+        let data;
+        try { data = JSON.parse(text); } catch (e) {
+            console.error('JSON parse error for', url, text.substring(0, 200));
+            throw { status: res.status, message: 'Invalid server response', raw: text };
+        }
+        if (!res.ok) {
+            const err = { status: res.status, ...data };
+            if (res.status === 401) {
+                localStorage.removeItem('S_S_Token');
+                err.message = data.message || 'Session expired. Please login again.';
+            }
+            throw err;
+        }
         return data;
     },
     async get(url, params = {}) {
         const clean = {};
-        for (const [k, v] of Object.entries(params)) { if (v !== undefined && v !== null && v !== '') clean[k] = v; }
+        for (const [k, v] of Object.entries(params)) {
+            if (v !== undefined && v !== null && v !== '') clean[k] = v;
+        }
         const qs = new URLSearchParams(clean).toString();
         return this.fetch(qs ? `${url}?${qs}` : url);
     },
@@ -51,33 +65,159 @@ Alpine.store('api', {
     async del(url) { return this.fetch(url, { method: 'DELETE' }); }
 });
 
-// Server-side pagination helper (reusable mixin pattern)
+// Utility: parse API response into paginated items
+// Handles: Laravel paginated, Laravel non-paginated, plain arrays, wrapped objects
+function parsePaginationResponse(data, perPage) {
+    let items = [], total = 0, currentPage = 1, lastPage = 1, serverPaginated = false;
+    let payload = data;
+
+    // Unwrap {status: true, data: ...} wrapper
+    if (data && typeof data === 'object' && data.status && 'data' in data) {
+        payload = data.data;
+    }
+
+    if (!payload) {
+        return { items, total, totalPages: 1, currentPage, serverPaginated };
+    }
+
+    // Server-side paginated: {data: [...], current_page, total, last_page, ...}
+    if (typeof payload === 'object' && !Array.isArray(payload) && Array.isArray(payload.data)) {
+        serverPaginated = true;
+        items = payload.data;
+        total = payload.total || 0;
+        currentPage = payload.current_page || 1;
+        lastPage = payload.last_page || Math.max(1, Math.ceil(total / perPage));
+        return { items, total, totalPages: lastPage, currentPage, serverPaginated };
+    }
+
+    // Non-paginated: plain array
+    if (Array.isArray(payload)) {
+        total = payload.length;
+        lastPage = Math.max(1, Math.ceil(total / perPage));
+        return { allItems: payload, items: payload.slice(0, perPage), total, totalPages: lastPage, currentPage: 1, serverPaginated: false };
+    }
+
+    // Fallback: empty
+    return { items: [], total: 0, totalPages: 1, currentPage: 1, serverPaginated: false };
+}
+
+// Server-side pagination helper (reusable pager)
 Alpine.store('pager', {
-    // Returns an object with methods for server-side paginated lists
     create(config) {
-        return {
-            items: [], loading: false, currentPage: 1, perPage: config.perPage || 10, total: 0, totalPages: 1,
-            visiblePages() {
-                const p = []; const s = Math.max(1, this.currentPage - 2); const e = Math.min(this.totalPages, this.currentPage + 2);
-                for (let i = s; i <= e; i++) p.push(i); return p;
+        const instance = {
+            allItems: [],       // cache for client-side pagination fallback
+            items: [],          // items for current page
+            loading: false,
+            currentPage: 1,
+            perPage: config.perPage || 10,
+            total: 0,
+            totalPages: 1,
+            serverPaginated: false,
+            searchParams: {},   // active search/filter params
+
+            get visiblePages() {
+                const p = [];
+                const s = Math.max(1, this.currentPage - 2);
+                const e = Math.min(this.totalPages, this.currentPage + 2);
+                for (let i = s; i <= e; i++) p.push(i);
+                return p;
             },
+
+            // Parse response and update state
+            _parse(data) {
+                const parsed = parsePaginationResponse(data, this.perPage);
+                this.items = parsed.items;
+                this.total = parsed.total;
+                this.totalPages = parsed.totalPages;
+                this.currentPage = parsed.currentPage;
+                this.serverPaginated = parsed.serverPaginated;
+                if (!parsed.serverPaginated && parsed.allItems) {
+                    this.allItems = parsed.allItems;
+                }
+            },
+
+            // Client-side page slicing
+            _slicePage() {
+                const start = (this.currentPage - 1) * this.perPage;
+                this.items = this.allItems.slice(start, start + this.perPage);
+            },
+
+            // Filter allItems client-side by search term
+            _clientFilter(searchTerm) {
+                if (!searchTerm) return this.allItems;
+                const term = searchTerm.toLowerCase();
+                return this.allItems.filter(item => {
+                    return Object.values(item).some(val => {
+                        if (val === null || val === undefined) return false;
+                        if (typeof val === 'object') {
+                            return Object.values(val).some(v => String(v).toLowerCase().includes(term));
+                        }
+                        return String(val).toLowerCase().includes(term);
+                    });
+                });
+            },
+
             async fetchPage(params = {}) {
                 this.loading = true;
                 try {
-                    const p = { page: this.currentPage, per_page: this.perPage, ...params };
-                    const data = await Alpine.store('api').get(config.endpoint, p);
-                    this.items = data.data?.data || data.data || [];
-                    this.total = data.data?.total || data.total || data.meta?.total || this.items.length;
-                    this.totalPages = data.data?.last_page || data.last_page || data.meta?.last_page || Math.ceil(this.total / this.perPage) || 1;
-                    this.currentPage = data.data?.current_page || data.current_page || data.meta?.current_page || this.currentPage;
+                    const queryParams = { page: this.currentPage, per_page: this.perPage, ...this.searchParams, ...params };
+                    const data = await Alpine.store('api').get(config.endpoint, queryParams);
+                    this._parse(data);
                     return true;
                 } catch (e) {
-                    Alpine.store('toast').error('Failed to load data');
+                    console.error('Pager fetchPage error:', e);
+                    if (e.status !== 401) {
+                        Alpine.store('toast').error(e.message || 'Failed to load data');
+                    }
+                    this.items = [];
+                    this.total = 0;
+                    this.totalPages = 1;
                     return false;
-                } finally { this.loading = false; }
+                } finally {
+                    this.loading = false;
+                }
             },
-            goToPage(page) { if (page >= 1 && page <= this.totalPages) { this.currentPage = page; this.fetchPage(); } }
+
+            goToPage(page) {
+                if (page < 1 || page > this.totalPages) return;
+                this.currentPage = page;
+                if (this.serverPaginated) {
+                    return this.fetchPage();
+                } else {
+                    this._slicePage();
+                    return Promise.resolve(true);
+                }
+            },
+
+            // Handle per-page dropdown changes
+            changePerPage(n) {
+                n = parseInt(n);
+                if (!n || n === this.perPage) return;
+                this.perPage = n;
+                this.currentPage = 1;
+                if (this.serverPaginated) {
+                    return this.fetchPage();
+                } else {
+                    this.totalPages = Math.max(1, Math.ceil(this.total / this.perPage));
+                    this._slicePage();
+                    return Promise.resolve(true);
+                }
+            },
+
+            // Set search/filter params and reload
+            setSearch(params = {}) {
+                this.currentPage = 1;
+                this.allItems = [];
+                this.searchParams = { ...params };
+                return this.fetchPage();
+            },
+
+            // Reload with current params
+            refresh() {
+                return this.fetchPage();
+            }
         };
+        return instance;
     }
 });
 

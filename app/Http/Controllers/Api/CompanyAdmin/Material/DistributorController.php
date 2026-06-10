@@ -14,10 +14,10 @@ class DistributorController extends Controller
 
     public function index(Request $request)
     {
-        $distributors = Distributor::where('company_id', $request->company_id)
+        $query = Distributor::where('company_id', $request->company_id)
             ->with('supplier')
-            ->latest()->get();
-        return $this->successResponse($distributors);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Distributors retrieved');
     }
 
     public function bySupplier(Request $request, $supplierId)

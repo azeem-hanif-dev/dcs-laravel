@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
 trait ApiResponse
 {
     protected function successResponse($data = null, $message = 'Success', $code = 200)
@@ -24,5 +26,28 @@ trait ApiResponse
             'message' => $message,
             'data' => $data,
         ], 200);
+    }
+
+    /**
+     * Paginate a query builder and return a standardized API response.
+     * If per_page param is provided, paginate; otherwise return all results.
+     */
+    protected function paginatedResponse($query, $request, $message = 'Success')
+    {
+        $perPage = (int) ($request->get('per_page', $request->get('perPage', 0)));
+
+        if ($perPage > 0) {
+            $page = (int) $request->get('page', 1);
+            $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json([
+                'status' => true,
+                'message' => $message,
+                'data' => $paginator,
+            ], 200);
+        }
+
+        $items = $query->get();
+        return $this->successResponse($items, $message);
     }
 }

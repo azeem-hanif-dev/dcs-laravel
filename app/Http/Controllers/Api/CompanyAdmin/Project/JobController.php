@@ -15,10 +15,10 @@ class JobController extends Controller
 
     public function index(Request $request)
     {
-        $jobs = ProjectJob::where('company_id', $request->company_id)
+        $query = ProjectJob::where('company_id', $request->company_id)
             ->with(['jobDef', 'project', 'floor', 'area', 'element', 'task', 'worker'])
-            ->latest()->get();
-        return $this->successResponse($jobs);
+            ->latest();
+        return $this->paginatedResponse($query, $request, 'Jobs retrieved');
     }
 
     public function store(Request $request)

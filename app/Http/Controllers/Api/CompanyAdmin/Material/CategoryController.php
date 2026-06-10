@@ -13,8 +13,8 @@ class CategoryController extends Controller
 
     public function index(Request $request)
     {
-        $categories = Category::where('company_id', $request->company_id)->with('subcategories')->latest()->get();
-        return $this->successResponse($categories);
+        $query = Category::where('company_id', $request->company_id)->with('subcategories')->latest();
+        return $this->paginatedResponse($query, $request, 'Categories retrieved');
     }
 
     public function store(Request $request)
