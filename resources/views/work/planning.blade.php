@@ -25,12 +25,12 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-md p-4 mb-6">
-        <div class="relative">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-2 mb-3">
+        <div class="relative max-w-xs w-full">
+            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="text" x-model="search" @input="currentPage = 1"
                 placeholder="Search planning..."
-                class="w-full pl-10 pr-4 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                class="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
         </div>
     </div>
 
@@ -49,6 +49,26 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- Loading state --}}
+                    <template x-if="loading">
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <svg class="spinner w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <div><p class="text-sm font-medium text-gray-400">Loading data...</p><p class="text-xs text-gray-400 mt-0.5">Please wait a moment</p></div>
+                            </div>
+                        </td></tr>
+                    </template>
+                    {{-- Empty state --}}
+                    <template x-if="!loading && paginatedPlans.length === 0">
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="max-w-sm mx-auto">
+                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                <h3 class="text-base font-semibold text-gray-400 mb-1">No Worker Plans Found</h3>
+                                <p class="text-sm text-gray-400">Select filters to view worker assignments</p>
+                            </div>
+                        </td></tr>
+                    </template>
+                    {{-- Data rows --}}
                     <template x-for="(item, index) in paginatedPlans" :key="item.id">
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <td class="px-4 py-3 text-gray-600" x-text="(currentPage - 1) * pageSize + index + 1"></td>
@@ -79,12 +99,6 @@
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="paginatedPlans.length === 0 && !loading">
-                        <td colspan="7" class="px-4 py-12 text-center text-gray-500">No worker plans found.</td>
-                    </tr>
-                    <tr x-show="loading">
-                        <td colspan="7" class="px-4 py-12 text-center text-gray-500">Loading...</td>
-                    </tr>
                 </tbody>
             </table>
         </div>

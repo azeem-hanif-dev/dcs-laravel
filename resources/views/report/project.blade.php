@@ -12,8 +12,8 @@
         </div>
 
         <div class="p-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row gap-3">
-            <div class="relative flex-1 min-w-[200px]">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="relative max-w-xs w-full">
+                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 <input type="text" x-model="search" @input.debounce.300="fetchData()" placeholder="Search projects..." class="w-full pl-10 pr-4 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
             </div>
             <select x-model="projectFilter" @change="fetchData()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
@@ -43,12 +43,26 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- Loading state --}}
                     <template x-if="loading">
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">Loading...</td></tr>
+                        <tr><td colspan="5" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <svg class="spinner w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <div><p class="text-sm font-medium text-gray-400">Loading data...</p><p class="text-xs text-gray-400 mt-0.5">Please wait a moment</p></div>
+                            </div>
+                        </td></tr>
                     </template>
+                    {{-- Empty state --}}
                     <template x-if="!loading && items.length === 0">
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-gray-500">No records found.</td></tr>
+                        <tr><td colspan="5" class="px-6 py-20 text-center">
+                            <div class="max-w-sm mx-auto">
+                                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                                <h3 class="text-base font-semibold text-gray-400 mb-1">No Records Found</h3>
+                                <p class="text-sm text-gray-400">No project reports available to display</p>
+                            </div>
+                        </td></tr>
                     </template>
+                    {{-- Data rows --}}
                     <template x-for="(item, index) in items" :key="item.id || index">
                         <tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                             <td class="px-4 py-3 text-gray-500" x-text="(currentPage - 1) * perPage + index + 1"></td>
