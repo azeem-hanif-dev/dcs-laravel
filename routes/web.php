@@ -12,7 +12,6 @@ use App\Http\Controllers\Web\PageController;
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::get('/', [AuthController::class, 'showLogin']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Company Admin routes (require auth via session)
@@ -56,5 +55,8 @@ Route::middleware(['web.auth'])->prefix('company_admin')->group(function () {
     // Under development
     Route::get('/under_development', [PageController::class, 'underDev']);
 });
+
+Route::get('/', [AuthController::class, 'showLogin']);
+
 
 // Public landing route

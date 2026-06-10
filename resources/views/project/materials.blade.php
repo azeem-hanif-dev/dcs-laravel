@@ -1,7 +1,7 @@
 {{-- resources/views/project/materials.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Project Materials - Digital Clean Solution')
+@section('title', 'Project Materials - Distributor Portal')
 
 @section('page-content')
 <div x-data="materialData()" x-init="fetchDependencies().then(() => fetchAssignments())" class="max-w-7xl mx-auto px-4">

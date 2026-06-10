@@ -1,10 +1,10 @@
 {{-- resources/views/report/quality.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Quality Controller (Inspections) - Digital Clean Solution')
+@section('title', 'Quality Controller - Distributor Portal')
 
 @section('page-content')
-<div class="max-w-7xl mx-auto px-2" x-data="qualityReportData()" x-init="init()">
+<div class="max-w-7xl mx-auto px-2 sm:px-4" x-data="qualityReportData()" x-init="init()">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -240,54 +240,24 @@ function qualityReportData() {
             this.fetchWorkers();
         },
 
-        getHeaders() {
-            let token = localStorage.getItem('S_S_Token');
-            return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json' };
-        },
-
         async fetchData() {
             this.loading = true;
             try {
-                let params = new URLSearchParams({ page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter });
-                let res = await fetch('/api/v1/quality-reports?' + params, { headers: this.getHeaders() });
-                let data = await res.json();
+                let params = { page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter };
+                let data = await $store.api.get('/api/v1/quality-reports', params);
                 this.items = data.data || [];
                 this.totalItems = data.total || data.meta?.total || 0;
                 this.currentPage = data.current_page || data.meta?.current_page || 1;
                 this.perPage = data.per_page || data.meta?.per_page || 10;
                 this.totalPages = data.last_page || data.meta?.last_page || 1;
-            } catch(e) {
-                this.showToast('Failed to fetch data', 'error');
-            } finally {
-                this.loading = false;
-            }
+            } catch(e) { $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-
-        async fetchProjects() {
-            try {
-                let res = await fetch('/api/v1/project?per_page=all', { headers: this.getHeaders() });
-                let data = await res.json();
-                this.projects = data.data || [];
-            } catch(e) { console.error('Failed to fetch projects', e); }
-        },
-
+        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 'all' }); this.projects = data.data || []; } catch(e) {} },
         async fetchTasks() {
             if (!this.form.project_id) { this.tasks = []; return; }
-            try {
-                let res = await fetch('/api/v1/task?project_id=' + this.form.project_id, { headers: this.getHeaders() });
-                let data = await res.json();
-                this.tasks = data.data || [];
-            } catch(e) { console.error('Failed to fetch tasks', e); }
+            try { let data = await $store.api.get('/api/v1/task', { project_id: this.form.project_id }); this.tasks = data.data || []; } catch(e) {}
         },
-
-        async fetchWorkers() {
-            try {
-                let res = await fetch('/api/v1/staff?per_page=all', { headers: this.getHeaders() });
-                let data = await res.json();
-                this.workers = data.data || [];
-                this.reviewers = data.data || [];
-            } catch(e) { console.error('Failed to fetch workers', e); }
-        },
+        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 'all' }); this.workers = data.data || []; this.reviewers = data.data || []; } catch(e) {} },
 
         openAddModal() {
             this.editingId = null;
@@ -319,59 +289,23 @@ function qualityReportData() {
         },
 
         async saveItem() {
-            if (!this.form.project_id || !this.form.task_id || !this.form.worker_id) {
-                this.showToast('Please fill all required fields', 'error');
-                return;
-            }
+            if (!this.form.project_id || !this.form.task_id || !this.form.worker_id) { $store.toast.error('Please fill all required fields'); return; }
             this.saving = true;
             try {
-                let url = this.editingId ? '/api/v1/quality-reports/' + this.editingId : '/api/v1/quality-reports';
                 let method = this.editingId ? 'PUT' : 'POST';
+                let url = this.editingId ? '/api/v1/quality-reports/' + this.editingId : '/api/v1/quality-reports';
                 let body = JSON.parse(JSON.stringify(this.form));
-                if (method === 'PUT') { body._method = 'PUT'; }
-                let res = await fetch(url, { method: 'POST', headers: this.getHeaders(), body: JSON.stringify(body) });
-                let data = await res.json();
-                if (res.ok) {
-                    this.showToast(this.editingId ? 'Inspection updated' : 'Inspection created', 'success');
-                    this.closeModal();
-                    this.fetchData();
-                } else {
-                    this.showToast(data.message || 'Save failed', 'error');
-                }
-            } catch(e) {
-                this.showToast('Save failed', 'error');
-            } finally {
-                this.saving = false;
-            }
+                if (method === 'PUT') body._method = 'PUT';
+                await $store.api.post(url, body);
+                $store.toast.success(this.editingId ? 'Inspection updated' : 'Inspection created');
+                this.closeModal(); this.fetchData();
+            } catch(e) { $store.toast.error(e.message || 'Save failed'); } finally { this.saving = false; }
         },
-
-        confirmDelete(item) {
-            this.deleteTarget = item;
-            this.showDeleteModal = true;
-        },
-
+        confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try {
-                let res = await fetch('/api/v1/quality-reports/' + this.deleteTarget.id, { method: 'DELETE', headers: this.getHeaders() });
-                if (res.ok) {
-                    this.showToast('Inspection deleted', 'success');
-                    this.showDeleteModal = false;
-                    this.fetchData();
-                } else {
-                    let data = await res.json();
-                    this.showToast(data.message || 'Delete failed', 'error');
-                }
-            } catch(e) {
-                this.showToast('Delete failed', 'error');
-            } finally {
-                this.deleting = false;
-            }
-        },
-
-        showToast(message, type) {
-            this.toast = { show: true, message, type };
-            setTimeout(() => this.toast.show = false, 3000);
+            try { await $store.api.delete('/api/v1/quality-reports/' + this.deleteTarget.id); $store.toast.success('Inspection deleted'); this.showDeleteModal = false; this.fetchData(); }
+            catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },

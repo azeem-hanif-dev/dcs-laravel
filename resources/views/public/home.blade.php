@@ -1,12 +1,12 @@
 {{-- resources/views/public/home.blade.php --}}
 @extends('layouts.auth')
-@section('title', 'Digital Clean Solution')
+@section('title', 'Distributor Portal')
 @section('content')
 <div class="min-h-screen bg-white">
     {{-- Navbar --}}
     <nav class="bg-white shadow-sm border-b">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <img src="/common/Logo.svg" alt="Logo" class="h-10" />
+            <img src="/common/distributor-logo.svg" alt="Logo" class="h-10" />
             <div class="flex gap-4">
                 <a href="/login" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80">Login</a>
             </div>

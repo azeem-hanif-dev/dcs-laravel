@@ -29,5 +29,8 @@
             @yield('page-content')
         </div>
     </main>
+
+    {{-- Global Toast Notifications --}}
+    @include('components.toast')
 </div>
 @endsection

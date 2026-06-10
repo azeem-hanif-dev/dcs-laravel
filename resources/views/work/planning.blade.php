@@ -1,10 +1,10 @@
 {{-- resources/views/work/planning.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Worker Planning - Digital Clean Solution')
+@section('title', 'Worker Planning - Distributor Portal')
 
 @section('page-content')
-<div x-data="workerPlanningData()" x-init="fetchDependencies().then(() => fetchWorkPlans())" class="max-w-7xl mx-auto px-4">
+<div x-data="workerPlanningData()" x-init="fetchDependencies().then(() => fetchWorkPlans())" class="max-w-7xl mx-auto px-2 sm:px-4">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 class="text-2xl font-bold text-gray-800">Worker Planning</h1>
         <div class="flex items-center gap-3">
@@ -245,8 +245,7 @@ function workerPlanningData() {
         ],
         form: { projectId: '', jobId: '', workerId: '', jobType: '', days: [], weeks: '', date: '', status: '' },
 
-        get token() { return localStorage.getItem('S_S_Token'); },
-        get authHeaders() { return { 'Authorization': 'Bearer ' + this.token, 'Content-Type': 'application/json', 'Accept': 'application/json' }; },
+
 
         get filteredPlans() {
             let list = this.workPlans;
@@ -291,46 +290,16 @@ function workerPlanningData() {
 
         async fetchDependencies() {
             try {
-                const [projRes, staffRes] = await Promise.all([
-                    fetch('/api/v1/project', { headers: this.authHeaders }),
-                    fetch('/api/v1/staff', { headers: this.authHeaders })
-                ]);
-                const projData = await projRes.json();
-                const staffData = await staffRes.json();
+                const [projData, staffData] = await Promise.all([$store.api.get('/api/v1/project'), $store.api.get('/api/v1/staff')]);
                 if (projData.status) this.projects = Array.isArray(projData.data) ? projData.data : [];
                 if (staffData.status) this.workers = Array.isArray(staffData.data) ? staffData.data : [];
-            } catch (e) {
-                console.error('Failed to load dependencies:', e);
-            }
+            } catch (e) { console.error('Failed to load dependencies:', e); }
         },
-
-        async fetchJobs(projectId) {
-            this.jobs = [];
-            if (!projectId) return;
-            try {
-                const res = await fetch('/api/v1/job/project/' + projectId, { headers: this.authHeaders });
-                const data = await res.json();
-                if (data.status) this.jobs = Array.isArray(data.data) ? data.data : [];
-            } catch (e) {
-                console.error('Failed to load jobs:', e);
-            }
-        },
-
+        async fetchJobs(projectId) { this.jobs = []; if (!projectId) return; try { let data = await $store.api.get('/api/v1/job/project/'+projectId); if (data.status) this.jobs = Array.isArray(data.data)?data.data:[]; } catch(e){} },
         async fetchWorkPlans() {
-            this.loading = true;
-            this.errorMsg = '';
-            try {
-                const res = await fetch('/api/v1/work', { headers: this.authHeaders });
-                const data = await res.json();
-                if (data.status) {
-                    this.workPlans = Array.isArray(data.data) ? data.data : [];
-                } else {
-                    this.errorMsg = data.message || 'Failed to load work plans';
-                }
-            } catch (e) {
-                this.errorMsg = 'Network error: ' + e.message;
-            }
-            this.loading = false;
+            this.loading = true; this.errorMsg = '';
+            try { let data = await $store.api.get('/api/v1/work'); if (data.status) this.workPlans = Array.isArray(data.data)?data.data:[]; else this.errorMsg = data.message||'Failed to load'; }
+            catch(e) { this.errorMsg = 'Network error: '+e.message; } this.loading = false;
         },
 
         openEditModal(item) {
@@ -364,46 +333,16 @@ function workerPlanningData() {
         },
 
         async saveWorkPlan() {
-            this.saving = true;
-            this.errorMsg = '';
-            const url = '/api/v1/work/' + this.editId;
-            const body = {
-                ...this.form,
-                weeks: this.form.weeks ? this.form.weeks.split(',').map(s => s.trim()).filter(Boolean) : []
-            };
-            try {
-                const res = await fetch(url, { method: 'PUT', headers: this.authHeaders, body: JSON.stringify(body) });
-                const data = await res.json();
-                if (data.status) {
-                    this.closeModal();
-                    await this.fetchWorkPlans();
-                } else {
-                    this.errorMsg = data.message || 'Save failed';
-                }
-            } catch (e) {
-                this.errorMsg = 'Network error: ' + e.message;
-            }
-            this.saving = false;
+            this.saving = true; this.errorMsg = '';
+            const body = { ...this.form, weeks: this.form.weeks ? this.form.weeks.split(',').map(s=>s.trim()).filter(Boolean) : [] };
+            try { await $store.api.put('/api/v1/work/'+this.editId, body); this.closeModal(); $store.toast.success('Work plan updated'); this.fetchWorkPlans(); }
+            catch(e) { this.errorMsg = e.message||'Save failed'; } this.saving = false;
         },
-
         async deleteWorkPlan() {
             if (!this.deleteTarget) return;
-            this.saving = true;
-            this.errorMsg = '';
-            try {
-                const res = await fetch('/api/v1/work/' + this.deleteTarget.id, { method: 'DELETE', headers: this.authHeaders });
-                const data = await res.json();
-                if (data.status) {
-                    this.deleteModalOpen = false;
-                    this.deleteTarget = null;
-                    await this.fetchWorkPlans();
-                } else {
-                    this.errorMsg = data.message || 'Delete failed';
-                }
-            } catch (e) {
-                this.errorMsg = 'Network error: ' + e.message;
-            }
-            this.saving = false;
+            this.saving = true; this.errorMsg = '';
+            try { await $store.api.delete('/api/v1/work/'+this.deleteTarget.id); this.deleteModalOpen = false; this.deleteTarget = null; $store.toast.success('Work plan deleted'); this.fetchWorkPlans(); }
+            catch(e) { this.errorMsg = e.message||'Delete failed'; } this.saving = false;
         }
     };
 }

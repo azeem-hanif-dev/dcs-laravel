@@ -1,10 +1,10 @@
 {{-- resources/views/report/worker.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Worker Reports - Digital Clean Solution')
+@section('title', 'Worker Reports - Distributor Portal')
 
 @section('page-content')
-<div class="max-w-7xl mx-auto px-2" x-data="workerReportData()" x-init="init()">
+<div class="max-w-7xl mx-auto px-2 sm:px-4" x-data="workerReportData()" x-init="init()">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-100">
             <h1 class="text-xl font-semibold text-gray-800">Worker Reports</h1>
@@ -187,36 +187,15 @@ function workerReportData() {
             this.fetchWorkers();
         },
 
-        getHeaders() {
-            let token = localStorage.getItem('S_S_Token');
-            return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json' };
-        },
-
         async fetchData() {
             this.loading = true;
             try {
-                let params = new URLSearchParams({ page: this.currentPage, per_page: this.perPage, search: this.search, worker_id: this.workerFilter, date_from: this.dateFrom, date_to: this.dateTo, status: this.statusFilter });
-                let res = await fetch('/api/v1/worker-reports?' + params, { headers: this.getHeaders() });
-                let data = await res.json();
-                this.items = data.data || [];
-                this.totalItems = data.total || data.meta?.total || 0;
-                this.currentPage = data.current_page || data.meta?.current_page || 1;
-                this.perPage = data.per_page || data.meta?.per_page || 10;
-                this.totalPages = data.last_page || data.meta?.last_page || 1;
-            } catch(e) {
-                this.showToast('Failed to fetch data', 'error');
-            } finally {
-                this.loading = false;
-            }
+                let params = { page: this.currentPage, per_page: this.perPage, search: this.search, worker_id: this.workerFilter, date_from: this.dateFrom, date_to: this.dateTo, status: this.statusFilter };
+                let data = await $store.api.get('/api/v1/worker-reports', params);
+                this.items = data.data || []; this.totalItems = data.total || data.meta?.total || 0; this.currentPage = data.current_page || data.meta?.current_page || 1; this.perPage = data.per_page || data.meta?.per_page || 10; this.totalPages = data.last_page || data.meta?.last_page || 1;
+            } catch(e) { $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-
-        async fetchWorkers() {
-            try {
-                let res = await fetch('/api/v1/staff?per_page=all', { headers: this.getHeaders() });
-                let data = await res.json();
-                this.workers = data.data || [];
-            } catch(e) { console.error('Failed to fetch workers', e); }
-        },
+        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 'all' }); this.workers = data.data || []; } catch(e) {} },
 
         openEditModal(item) {
             this.editingId = item.id || item.checkId;
@@ -238,51 +217,16 @@ function workerReportData() {
         async saveItem() {
             this.saving = true;
             try {
-                let body = JSON.parse(JSON.stringify(this.form));
-                body._method = 'PUT';
-                let res = await fetch('/api/v1/worker-reports/' + this.editingId, { method: 'POST', headers: this.getHeaders(), body: JSON.stringify(body) });
-                if (res.ok) {
-                    this.showToast('Record updated', 'success');
-                    this.closeModal();
-                    this.fetchData();
-                } else {
-                    let data = await res.json();
-                    this.showToast(data.message || 'Update failed', 'error');
-                }
-            } catch(e) {
-                this.showToast('Update failed', 'error');
-            } finally {
-                this.saving = false;
-            }
+                let body = JSON.parse(JSON.stringify(this.form)); body._method = 'PUT';
+                await $store.api.post('/api/v1/worker-reports/' + this.editingId, body);
+                $store.toast.success('Record updated'); this.closeModal(); this.fetchData();
+            } catch(e) { $store.toast.error(e.message || 'Update failed'); } finally { this.saving = false; }
         },
-
-        confirmDelete(item) {
-            this.deleteTarget = item;
-            this.showDeleteModal = true;
-        },
-
+        confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try {
-                let res = await fetch('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId), { method: 'DELETE', headers: this.getHeaders() });
-                if (res.ok) {
-                    this.showToast('Record deleted', 'success');
-                    this.showDeleteModal = false;
-                    this.fetchData();
-                } else {
-                    let data = await res.json();
-                    this.showToast(data.message || 'Delete failed', 'error');
-                }
-            } catch(e) {
-                this.showToast('Delete failed', 'error');
-            } finally {
-                this.deleting = false;
-            }
-        },
-
-        showToast(message, type) {
-            this.toast = { show: true, message, type };
-            setTimeout(() => this.toast.show = false, 3000);
+            try { await $store.api.delete('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId)); $store.toast.success('Record deleted'); this.showDeleteModal = false; this.fetchData(); }
+            catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },

@@ -1,11 +1,12 @@
 {{-- resources/views/components/sidebar.blade.php --}}
 <aside x-data="{ expandedMenu: '{{ session('expanded_menu', '') }}' }"
-    class="fixed top-0 left-0 z-40 h-screen bg-gradient-to-tr from-primary/20 to-white shadow-lg transform transition-transform duration-300 ease-in-out w-[19rem] flex flex-col font-urbanist -translate-x-full lg:translate-x-0"
-    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+    class="fixed top-0 left-0 z-40 h-screen bg-white shadow-xl sidebar-transition w-[17rem] sm:w-[19rem] flex flex-col font-urbanist -translate-x-full lg:translate-x-0"
+    :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    @click.outside="sidebarOpen = false">
 
     {{-- Logo --}}
     <div class="py-6 px-8 flex justify-center">
-        <img src="/common/Logo.svg" alt="Logo" class="w-32 object-contain" />
+        <img src="/common/distributor-logo.svg" alt="Distributor Logo" class="w-36 object-contain" />
     </div>
 
     {{-- Navigation --}}
@@ -13,10 +14,8 @@
         <nav class="space-y-2">
             @php
             $currentRoute = request()->path();
-            $role = session('user_designation', 'admin');
-            
             $navLinks = [
-                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard'],
+                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard' , 'isPage' => true],
                 [
                     'title' => 'Projects', 'icon' => 'factory',
                     'subLinks' => [
@@ -58,7 +57,6 @@
                 ],
             ];
 
-            // SVG icon map
             $icons = [
                 'layout-dashboard' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>',
                 'factory' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
@@ -72,6 +70,7 @@
             @foreach($navLinks as $link)
                 @php
                     $hasSubLinks = isset($link['subLinks']);
+                    $isPage = isset($link['isPage']) && $link['isPage'];
                     $linkPath = $link['path'] ?? '';
                     $isActive = $currentRoute === $linkPath;
                     if ($hasSubLinks) {
@@ -81,30 +80,36 @@
                     }
                 @endphp
                 <div>
-                    <button @click="expandedMenu = expandedMenu === '{{ $link['title'] }}' ? '' : '{{ $link['title'] }}'"
-                        class="group w-full flex items-center justify-between gap-3 p-3 rounded-xl transition-all font-medium
-                        {{ $isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
-                        <span class="flex items-center gap-3 flex-1">
+                    @if($isPage)
+                        {{-- Direct page link (Dashboard) --}}
+                        <a href="{{ url($linkPath) }}"
+                            class="group w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium
+                            {{ $isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
                             <span class="flex-shrink-0">{!! $icons[$link['icon']] ?? '' !!}</span>
                             <span>{{ $link['title'] }}</span>
-                        </span>
-                        @if($hasSubLinks)
-                        <svg class="w-4 h-4 transition-transform" :class="expandedMenu === '{{ $link['title'] }}' ? 'rotate-90' : ''"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                        @endif
-                    </button>
-                    @if($hasSubLinks)
-                    <div x-show="expandedMenu === '{{ $link['title'] }}'" x-transition class="pl-10 mt-1 space-y-1">
-                        @foreach($link['subLinks'] as $sub)
-                        <a href="{{ url($sub['path']) }}"
-                            class="block w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors
-                            {{ $currentRoute === $sub['path'] ? 'bg-primary text-white font-semibold' : 'text-gray-600 hover:bg-primary hover:text-white' }}">
-                            {{ $sub['title'] }}
                         </a>
-                        @endforeach
-                    </div>
+                    @else
+                        <button @click="expandedMenu = expandedMenu === '{{ $link['title'] }}' ? '' : '{{ $link['title'] }}'"
+                            class="group w-full flex items-center justify-between gap-3 p-3 rounded-xl transition-all font-medium
+                            {{ $isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">
+                            <span class="flex items-center gap-3 flex-1">
+                                <span class="flex-shrink-0">{!! $icons[$link['icon']] ?? '' !!}</span>
+                                <span>{{ $link['title'] }}</span>
+                            </span>
+                            <svg class="w-4 h-4 transition-transform" :class="expandedMenu === '{{ $link['title'] }}' ? 'rotate-90' : ''"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <div x-show="expandedMenu === '{{ $link['title'] }}'" x-transition class="pl-10 mt-1 space-y-1">
+                            @foreach($link['subLinks'] as $sub)
+                            <a href="{{ url($sub['path']) }}"
+                                class="block w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors
+                                {{ $currentRoute === $sub['path'] ? 'bg-primary text-white font-semibold' : 'text-gray-600 hover:bg-primary hover:text-white' }}">
+                                {{ $sub['title'] }}
+                            </a>
+                            @endforeach
+                        </div>
                     @endif
                 </div>
             @endforeach

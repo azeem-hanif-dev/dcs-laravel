@@ -1,10 +1,10 @@
 {{-- resources/views/report/project.blade.php --}}
 @extends('layouts.admin')
 
-@section('title', 'Project Reports - Digital Clean Solution')
+@section('title', 'Project Reports - Distributor Portal')
 
 @section('page-content')
-<div class="max-w-7xl mx-auto px-2" x-data="projectReportData()" x-init="init()">
+<div class="max-w-7xl mx-auto px-2 sm:px-4" x-data="projectReportData()" x-init="init()">
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-100">
             <h1 class="text-xl font-semibold text-gray-800">Project Reports</h1>
@@ -186,37 +186,16 @@ function projectReportData() {
             this.fetchProjects();
         },
 
-        getHeaders() {
-            let token = localStorage.getItem('S_S_Token');
-            return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Accept': 'application/json' };
-        },
-
         async fetchData() {
             this.loading = true;
             try {
-                let params = new URLSearchParams({ page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter });
-                if (this.projectFilter) { params.set('projectId', this.projectFilter); }
-                let res = await fetch('/api/v1/project-reports/by-project?' + params, { headers: this.getHeaders() });
-                let data = await res.json();
-                this.items = data.data || [];
-                this.totalItems = data.total || data.meta?.total || 0;
-                this.currentPage = data.current_page || data.meta?.current_page || 1;
-                this.perPage = data.per_page || data.meta?.per_page || 10;
-                this.totalPages = data.last_page || data.meta?.last_page || 1;
-            } catch(e) {
-                this.showToast('Failed to fetch data', 'error');
-            } finally {
-                this.loading = false;
-            }
+                let params = { page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter };
+                if (this.projectFilter) params.projectId = this.projectFilter;
+                let data = await $store.api.get('/api/v1/project-reports/by-project', params);
+                this.items = data.data || []; this.totalItems = data.total || data.meta?.total || 0; this.currentPage = data.current_page || data.meta?.current_page || 1; this.perPage = data.per_page || data.meta?.per_page || 10; this.totalPages = data.last_page || data.meta?.last_page || 1;
+            } catch(e) { $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-
-        async fetchProjects() {
-            try {
-                let res = await fetch('/api/v1/project?per_page=all', { headers: this.getHeaders() });
-                let data = await res.json();
-                this.projects = data.data || [];
-            } catch(e) { console.error('Failed to fetch projects', e); }
-        },
+        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 'all' }); this.projects = data.data || []; } catch(e) {} },
 
         viewDetails(item) {
             this.detailItem = item;
@@ -230,32 +209,14 @@ function projectReportData() {
 
         async downloadPdf(item) {
             try {
-                let res = await fetch('/api/v1/project-reports/pdf', {
+                let res = await $store.api.fetch('/api/v1/project-reports/pdf', {
                     method: 'POST',
-                    headers: this.getHeaders(),
                     body: JSON.stringify({ project_id: item.project?.id || item.id, projectId: item.project?.id || item.id })
                 });
                 if (res.ok) {
-                    let blob = await res.blob();
-                    let url = window.URL.createObjectURL(blob);
-                    let a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'project-report-' + (item.project?.name || item.name || 'report') + '.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                } else {
-                    this.showToast('Failed to download PDF', 'error');
-                }
-            } catch(e) {
-                this.showToast('Failed to download PDF', 'error');
-            }
-        },
-
-        showToast(message, type) {
-            this.toast = { show: true, message, type };
-            setTimeout(() => this.toast.show = false, 3000);
+                    let blob = await res.blob(); let url = window.URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = 'project-report-' + (item.project?.name || item.name || 'report') + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
+                } else { $store.toast.error('Failed to download PDF'); }
+            } catch(e) { $store.toast.error('Failed to download PDF'); }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },
