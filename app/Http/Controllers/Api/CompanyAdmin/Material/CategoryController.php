@@ -1,0 +1,49 @@
+<?php
+
+namespace App\Http\Controllers\Api\CompanyAdmin\Material;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\ApiResponse;
+use App\Models\Material\Category;
+use Illuminate\Http\Request;
+
+class CategoryController extends Controller
+{
+    use ApiResponse;
+
+    public function index(Request $request)
+    {
+        $categories = Category::where('company_id', $request->company_id)->with('subcategories')->latest()->get();
+        return $this->successResponse($categories);
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate(['name' => 'required|in:Chemical,Hard Material,Textile,Paper,Machine']);
+        $data['user_id'] = $request->auth_user->id;
+        $data['company_id'] = $request->company_id;
+        $category = Category::create($data);
+        return $this->successResponse($category, 'Category created successfully', 201);
+    }
+
+    public function show(Request $request, $id)
+    {
+        $category = Category::where('company_id', $request->company_id)->with('subcategories')->findOrFail($id);
+        return $this->successResponse($category);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $category = Category::where('company_id', $request->company_id)->findOrFail($id);
+        $data = $request->validate(['name' => 'required|in:Chemical,Hard Material,Textile,Paper,Machine']);
+        $category->update($data);
+        return $this->successResponse($category, 'Category updated successfully');
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $category = Category::where('company_id', $request->company_id)->findOrFail($id);
+        $category->delete();
+        return $this->successResponse(null, 'Category deleted successfully');
+    }
+}
