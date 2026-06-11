@@ -2,6 +2,16 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Redirect to login if no valid token --}}
+<script>
+(function(){
+    var token = localStorage.getItem('S_S_Token');
+    if (!token) {
+        window.location.replace('/login');
+    }
+})();
+</script>
+
 {{-- Full-page loader (hidden by Alpine once ready) --}}
 <div x-data x-init="$el.remove()" class="page-loader" id="pageLoader">
     <div class="loader-content">

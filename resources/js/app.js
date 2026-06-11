@@ -68,9 +68,11 @@ Alpine.store('api', {
         if (!res.ok) {
             const err = { status: res.status, ...data };
             if (res.status === 401) {
-                if (!data.expired) {
-                    // Only clear token if not expired (network/auth error)
-                    // For expired tokens, we already tried refresh
+                // Check if refresh already failed or not available
+                if (!this.getToken() || data.expired) {
+                    localStorage.removeItem('S_S_Token');
+                    Alpine.store('toast').error('Session expired. Redirecting to login...', 2000);
+                    setTimeout(function(){ window.location.replace('/login'); }, 1500);
                 }
                 err.message = data.message || 'Session expired. Please login again.';
             }
