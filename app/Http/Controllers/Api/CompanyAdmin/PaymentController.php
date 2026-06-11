@@ -39,6 +39,7 @@ class PaymentController extends Controller
         // Update invoice paid_amount
         $invoice = Invoice::find($data['invoice_id']);
         $invoice->increment('paid_amount', $data['amount']);
+        $invoice->refresh(); // Refresh to get updated generated columns
 
         // Auto-update invoice status
         if ($invoice->balance_due <= 0) {
@@ -61,6 +62,7 @@ class PaymentController extends Controller
         $invoice = Invoice::find($payment->invoice_id);
         if ($invoice) {
             $invoice->decrement('paid_amount', $payment->amount);
+            $invoice->refresh(); // Refresh generated columns
             if ($invoice->paid_amount <= 0) {
                 $invoice->update(['status' => 'Unpaid']);
             } elseif ($invoice->balance_due > 0) {
