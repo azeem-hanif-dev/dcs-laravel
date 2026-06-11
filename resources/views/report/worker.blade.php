@@ -205,7 +205,7 @@ function workerReportData() {
             this.loading = true;
             try {
                 let params = { page: this.currentPage, per_page: this.perPage, search: this.search, worker_id: this.workerFilter, date_from: this.dateFrom, date_to: this.dateTo, status: this.statusFilter };
-                let resp = await $store.api.get('/api/v1/worker-reports', params);
+                let resp = await Alpine.store('api').get('/api/v1/worker-reports', params);
                 if (resp && resp.status) {
                     let payload = resp.data;
                     if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
@@ -220,9 +220,9 @@ function workerReportData() {
                         this.totalPages = Math.ceil(this.totalItems / this.perPage) || 1;
                     }
                 }
-            } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
+            } catch(e) { console.error(e); Alpine.store('toast').error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; } catch(e) {} },
+        async fetchWorkers() { try { let data = await Alpine.store('api').get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; } catch(e) {} },
 
         openEditModal(item) {
             this.editingId = item.id || item.checkId;
@@ -245,15 +245,15 @@ function workerReportData() {
             this.saving = true;
             try {
                 let body = JSON.parse(JSON.stringify(this.form)); body._method = 'PUT';
-                await $store.api.post('/api/v1/worker-reports/' + this.editingId, body);
-                $store.toast.success('Record updated'); this.closeModal(); this.fetchData();
-            } catch(e) { $store.toast.error(e.message || 'Update failed'); } finally { this.saving = false; }
+                await Alpine.store('api').post('/api/v1/worker-reports/' + this.editingId, body);
+                Alpine.store('toast').success('Record updated'); this.closeModal(); this.fetchData();
+            } catch(e) { Alpine.store('toast').error(e.message || 'Update failed'); } finally { this.saving = false; }
         },
         confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try { await $store.api.del('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId)); $store.toast.success('Record deleted'); this.showDeleteModal = false; this.fetchData(); }
-            catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
+            try { await Alpine.store('api').del('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId)); Alpine.store('toast').success('Record deleted'); this.showDeleteModal = false; this.fetchData(); }
+            catch(e) { Alpine.store('toast').error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },

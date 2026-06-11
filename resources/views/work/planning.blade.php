@@ -304,15 +304,15 @@ function workerPlanningData() {
 
         async fetchDependencies() {
             try {
-                const [projData, staffData] = await Promise.all([$store.api.get('/api/v1/project'), $store.api.get('/api/v1/staff')]);
+                const [projData, staffData] = await Promise.all([Alpine.store('api').get('/api/v1/project'), Alpine.store('api').get('/api/v1/staff')]);
                 if (projData.status) this.projects = Array.isArray(projData.data) ? projData.data : [];
                 if (staffData.status) this.workers = Array.isArray(staffData.data) ? staffData.data : [];
             } catch (e) { console.error('Failed to load dependencies:', e); }
         },
-        async fetchJobs(projectId) { this.jobs = []; if (!projectId) return; try { let data = await $store.api.get('/api/v1/job/project/'+projectId); if (data.status) this.jobs = Array.isArray(data.data)?data.data:[]; } catch(e){} },
+        async fetchJobs(projectId) { this.jobs = []; if (!projectId) return; try { let data = await Alpine.store('api').get('/api/v1/job/project/'+projectId); if (data.status) this.jobs = Array.isArray(data.data)?data.data:[]; } catch(e){} },
         async fetchWorkPlans() {
             this.loading = true; this.errorMsg = '';
-            try { let data = await $store.api.get('/api/v1/work'); if (data.status) this.workPlans = Array.isArray(data.data)?data.data:[]; else this.errorMsg = data.message||'Failed to load'; }
+            try { let data = await Alpine.store('api').get('/api/v1/work'); if (data.status) this.workPlans = Array.isArray(data.data)?data.data:[]; else this.errorMsg = data.message||'Failed to load'; }
             catch(e) { this.errorMsg = 'Network error: '+e.message; } this.loading = false;
         },
 
@@ -349,13 +349,13 @@ function workerPlanningData() {
         async saveWorkPlan() {
             this.saving = true; this.errorMsg = '';
             const body = { ...this.form, weeks: this.form.weeks ? this.form.weeks.split(',').map(s=>s.trim()).filter(Boolean) : [] };
-            try { await $store.api.put('/api/v1/work/'+this.editId, body); this.closeModal(); $store.toast.success('Work plan updated'); this.fetchWorkPlans(); }
+            try { await Alpine.store('api').put('/api/v1/work/'+this.editId, body); this.closeModal(); Alpine.store('toast').success('Work plan updated'); this.fetchWorkPlans(); }
             catch(e) { this.errorMsg = e.message||'Save failed'; } this.saving = false;
         },
         async deleteWorkPlan() {
             if (!this.deleteTarget) return;
             this.saving = true; this.errorMsg = '';
-            try { await $store.api.del('/api/v1/work/'+this.deleteTarget.id); this.deleteModalOpen = false; this.deleteTarget = null; $store.toast.success('Work plan deleted'); this.fetchWorkPlans(); }
+            try { await Alpine.store('api').del('/api/v1/work/'+this.deleteTarget.id); this.deleteModalOpen = false; this.deleteTarget = null; Alpine.store('toast').success('Work plan deleted'); this.fetchWorkPlans(); }
             catch(e) { this.errorMsg = e.message||'Delete failed'; } this.saving = false;
         }
     };

@@ -258,7 +258,7 @@ function qualityReportData() {
             this.loading = true;
             try {
                 let params = { page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter };
-                let resp = await $store.api.get('/api/v1/quality-reports', params);
+                let resp = await Alpine.store('api').get('/api/v1/quality-reports', params);
                 if (resp && resp.status) {
                     let payload = resp.data;
                     if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
@@ -273,14 +273,14 @@ function qualityReportData() {
                         this.totalPages = Math.ceil(this.totalItems / this.perPage) || 1;
                     }
                 }
-            } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
+            } catch(e) { console.error(e); Alpine.store('toast').error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
+        async fetchProjects() { try { let data = await Alpine.store('api').get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
         async fetchTasks() {
             if (!this.form.project_id) { this.tasks = []; return; }
-            try { let data = await $store.api.get('/api/v1/task', { project_id: this.form.project_id }); this.tasks = data.data || []; } catch(e) {}
+            try { let data = await Alpine.store('api').get('/api/v1/task', { project_id: this.form.project_id }); this.tasks = data.data || []; } catch(e) {}
         },
-        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; this.reviewers = data.data || []; } catch(e) {} },
+        async fetchWorkers() { try { let data = await Alpine.store('api').get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; this.reviewers = data.data || []; } catch(e) {} },
 
         openAddModal() {
             this.editingId = null;
@@ -312,23 +312,23 @@ function qualityReportData() {
         },
 
         async saveItem() {
-            if (!this.form.project_id || !this.form.task_id || !this.form.worker_id) { $store.toast.error('Please fill all required fields'); return; }
+            if (!this.form.project_id || !this.form.task_id || !this.form.worker_id) { Alpine.store('toast').error('Please fill all required fields'); return; }
             this.saving = true;
             try {
                 let method = this.editingId ? 'PUT' : 'POST';
                 let url = this.editingId ? '/api/v1/quality-reports/' + this.editingId : '/api/v1/quality-reports';
                 let body = JSON.parse(JSON.stringify(this.form));
                 if (method === 'PUT') body._method = 'PUT';
-                await $store.api.post(url, body);
-                $store.toast.success(this.editingId ? 'Inspection updated' : 'Inspection created');
+                await Alpine.store('api').post(url, body);
+                Alpine.store('toast').success(this.editingId ? 'Inspection updated' : 'Inspection created');
                 this.closeModal(); this.fetchData();
-            } catch(e) { $store.toast.error(e.message || 'Save failed'); } finally { this.saving = false; }
+            } catch(e) { Alpine.store('toast').error(e.message || 'Save failed'); } finally { this.saving = false; }
         },
         confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try { await $store.api.del('/api/v1/quality-reports/' + this.deleteTarget.id); $store.toast.success('Inspection deleted'); this.showDeleteModal = false; this.fetchData(); }
-            catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
+            try { await Alpine.store('api').del('/api/v1/quality-reports/' + this.deleteTarget.id); Alpine.store('toast').success('Inspection deleted'); this.showDeleteModal = false; this.fetchData(); }
+            catch(e) { Alpine.store('toast').error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },

@@ -84,7 +84,7 @@
 <script>
 function dashboardData(){return{
     counts:{products:0,shops:0,suppliers:0,pendingOrders:0,unpaidInvoices:0,lowStock:0},recentOrders:[],recentPayments:[],loading:true,
-    async loadData(){this.loading=true;try{var d=await $store.api.get('/api/v1/dashboard/counts');if(d&&d.status)this.counts=d.data;var ro=await $store.api.get('/api/v1/sales-order',{per_page:5});if(ro&&ro.status)this.recentOrders=Array.isArray(ro.data)?ro.data:(ro.data?.data||[]);var rp=await $store.api.get('/api/v1/payment',{per_page:5});if(rp&&rp.status)this.recentPayments=Array.isArray(rp.data)?rp.data:(rp.data?.data||[])}catch(e){console.error('Dashboard load error:',e)}this.loading=false}
+    async loadData(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/dashboard/counts');if(d&&d.status)this.counts=d.data;var ro=await Alpine.store('api').get('/api/v1/sales-order',{per_page:5});if(ro&&ro.status)this.recentOrders=Array.isArray(ro.data)?ro.data:(ro.data?.data||[]);var rp=await Alpine.store('api').get('/api/v1/payment',{per_page:5});if(rp&&rp.status)this.recentPayments=Array.isArray(rp.data)?rp.data:(rp.data?.data||[])}catch(e){console.error('Dashboard load error:',e)}this.loading=false}
 }}
 </script>
 @endpush

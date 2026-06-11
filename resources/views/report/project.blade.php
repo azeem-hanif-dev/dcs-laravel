@@ -205,7 +205,7 @@ function projectReportData() {
             try {
                 let params = { page: this.currentPage, per_page: this.perPage, search: this.search, status: this.statusFilter };
                 if (this.projectFilter) params.projectId = this.projectFilter;
-                let resp = await $store.api.get('/api/v1/project-reports/by-project', params);
+                let resp = await Alpine.store('api').get('/api/v1/project-reports/by-project', params);
                 if (resp && resp.status) {
                     let payload = resp.data;
                     if (payload && !Array.isArray(payload) && Array.isArray(payload.data)) {
@@ -220,9 +220,9 @@ function projectReportData() {
                         this.totalPages = Math.ceil(this.totalItems / this.perPage) || 1;
                     }
                 }
-            } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
+            } catch(e) { console.error(e); Alpine.store('toast').error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
+        async fetchProjects() { try { let data = await Alpine.store('api').get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
 
         viewDetails(item) {
             this.detailItem = item;
@@ -236,14 +236,14 @@ function projectReportData() {
 
         async downloadPdf(item) {
             try {
-                let res = await $store.api.fetch('/api/v1/project-reports/pdf', {
+                let res = await Alpine.store('api').fetch('/api/v1/project-reports/pdf', {
                     method: 'POST',
                     body: JSON.stringify({ project_id: item.project?.id || item.id, projectId: item.project?.id || item.id })
                 });
                 if (res.ok) {
                     let blob = await res.blob(); let url = window.URL.createObjectURL(blob); let a = document.createElement('a'); a.href = url; a.download = 'project-report-' + (item.project?.name || item.name || 'report') + '.pdf'; document.body.appendChild(a); a.click(); a.remove(); window.URL.revokeObjectURL(url);
-                } else { $store.toast.error('Failed to download PDF'); }
-            } catch(e) { $store.toast.error('Failed to download PDF'); }
+                } else { Alpine.store('toast').error('Failed to download PDF'); }
+            } catch(e) { Alpine.store('toast').error('Failed to download PDF'); }
         },
 
         prevPage() { if (this.currentPage > 1) { this.currentPage--; this.fetchData(); } },
