@@ -108,7 +108,7 @@
     </div>
 
     {{-- Edit Modal --}}
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black bg-opacity-50" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-md" @click.outside="closeModal()">
             <div class="flex items-center justify-between p-5 border-b border-gray-100">
@@ -222,7 +222,7 @@ function workerReportData() {
                 }
             } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 'all' }); this.workers = data.data || []; } catch(e) {} },
+        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; } catch(e) {} },
 
         openEditModal(item) {
             this.editingId = item.id || item.checkId;
@@ -252,7 +252,7 @@ function workerReportData() {
         confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try { await $store.api.delete('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId)); $store.toast.success('Record deleted'); this.showDeleteModal = false; this.fetchData(); }
+            try { await $store.api.del('/api/v1/worker-reports/' + (this.deleteTarget.id || this.deleteTarget.checkId)); $store.toast.success('Record deleted'); this.showDeleteModal = false; this.fetchData(); }
             catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 

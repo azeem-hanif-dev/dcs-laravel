@@ -97,7 +97,7 @@
     </div>
 
     {{-- Add/Edit Modal --}}
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity.duration.200>
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity.duration.200>
         <div class="fixed inset-0 bg-black/40" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10">
             <div class="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">
@@ -171,7 +171,7 @@
     </div>
 
     {{-- Status Update Modal --}}
-    <div x-show="statusModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="statusModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black/40" @click="statusModalOpen=false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm z-10">
             <div class="flex items-center justify-between px-6 py-4 border-b">
@@ -202,7 +202,7 @@
     </div>
 
     {{-- Delete Confirmation Modal --}}
-    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="deleteModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black/40" @click="deleteModalOpen=false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10 text-center">
             <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">

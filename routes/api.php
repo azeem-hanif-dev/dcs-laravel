@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\CompanyAdmin\Material\MaterialOrderController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\JobController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectMaterialAssignmentController;
+use App\Http\Controllers\Api\CompanyAdmin\Project\TaskController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\StaffRoleController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\StaffController;
 use App\Http\Controllers\Api\CompanyAdmin\StaffManagement\DesignationController;
@@ -108,6 +109,9 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     Route::get('job/dependencies', [JobController::class, 'dependencies']);
     Route::delete('job/unassignedWorkers/{id}', [JobController::class, 'destroyUnassigned']);
     Route::apiResource('job', JobController::class);
+
+    // Tasks (Project)
+    Route::apiResource('task', TaskController::class)->only(['index']);
 
     // Project Material Assignment
     Route::apiResource('project-material-assignment', ProjectMaterialAssignmentController::class);

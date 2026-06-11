@@ -1,7 +1,7 @@
 {{-- Professional delete confirmation modal --}}
 @props(['show' => 'deleteModalOpen', 'title' => 'Confirm Delete', 'itemName' => '', 'onConfirm' => 'deleteItem()', 'onCancel' => 'deleteModalOpen = false', 'saving' => 'saving'])
 
-<div x-show="{{ $show }}" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+<div x-show="{{ $show }}" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
     x-transition.opacity.duration.200
     @keydown.escape.window="{{ $onCancel }}">
     {{-- Backdrop --}}

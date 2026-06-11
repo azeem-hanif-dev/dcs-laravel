@@ -78,7 +78,7 @@
     </div>
 
     {{-- Add/Edit Modal --}}
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black/40" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10" @click.outside="closeModal()">
             <div class="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">
@@ -168,7 +168,7 @@
     </div>
 
     {{-- Delete Confirm --}}
-    <div x-show="deleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="deleteModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black/40" @click="deleteModalOpen=false"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10 text-center">
             <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center"><svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg></div>
@@ -194,7 +194,7 @@ function staffData(){return{
     openAddModal(){this.editId=null;this.errors={};this.form={name:'',username:'',email:'',employeeCode:'',phone:'',designation:'',jobTypeId:'',gender:'',visaExpiry:'',healthExpiry:'',passportExpiry:'',password:''};this.modalOpen=true},
     openEditModal(s){this.editId=s.id;this.errors={};this.form={name:s.name||'',username:s.username||'',email:s.email||'',employeeCode:s.employee_code||s.employeeCode||'',phone:s.phone||'',designation:s.designation||'',jobTypeId:s.job_type_id||s.jobTypeId||'',gender:s.gender||'',visaExpiry:s.visa_expiry||s.visaExpiry||'',healthExpiry:s.health_expiry||s.healthExpiry||'',passportExpiry:s.passport_expiry||s.passportExpiry||'',password:''};this.modalOpen=true},
     closeModal(){this.modalOpen=false;this.editId=null;this.errors={}},
-    async saveItem(){this.errors={};if(!this.form.name){this.errors.name='Name is required';return}if(!this.form.username){this.errors.username='Username is required';return}if(!this.form.designation){this.errors.designation='Designation is required';return}if(!this.editId&&!this.form.password){this.errors.password='Password is required';return}this.saving=true;var body={name:this.form.name,username:this.form.username,email:this.form.email||'',employee_code:this.form.employeeCode||'',phone:this.form.phone||'',designation:this.form.designation,job_type_id:this.form.jobTypeId||'',gender:this.form.gender||'',visa_expiry:this.form.visaExpiry||'',health_expiry:this.form.healthExpiry||'',passport_expiry:this.form.passportExpiry||''};if(!this.editId)body.password=this.form.password;try{if(this.editId){await Alpine.store('api').put('/api/v1/staff/'+this.editId,body)}else{await Alpine.store('api').post('/api/v1/staff/store',body)}this.closeModal();Alpine.store('toast').success(this.editId?'Staff updated':'Staff created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
+    async saveItem(){this.errors={};if(!this.form.name){this.errors.name='Name is required';return}if(!this.form.username){this.errors.username='Username is required';return}if(!this.form.designation){this.errors.designation='Designation is required';return}if(!this.editId&&!this.form.password){this.errors.password='Password is required';return}this.saving=true;var body={name:this.form.name,username:this.form.username,email:this.form.email||'',employee_code:this.form.employeeCode||'',phone:this.form.phone||'',designation:this.form.designation,job_type_id:this.form.jobTypeId||'',gender:this.form.gender||'',visa_expiry:this.form.visaExpiry||'',health_expiry:this.form.healthExpiry||'',passport_expiry:this.form.passportExpiry||''};if(!this.editId)body.password=this.form.password;try{if(this.editId){await Alpine.store('api').put('/api/v1/staff/'+this.editId,body)}else{await Alpine.store('api').post('/api/v1/staff',body)}this.closeModal();Alpine.store('toast').success(this.editId?'Staff updated':'Staff created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
     confirmDelete(s){this.deleteTarget=s;this.deleteModalOpen=true},
     async deleteItem(){if(!this.deleteTarget)return;this.saving=true;try{await Alpine.store('api').del('/api/v1/staff/'+this.deleteTarget.id);this.deleteModalOpen=false;this.deleteTarget=null;Alpine.store('toast').success('Staff deleted');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Delete failed')}this.saving=false},
     changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},

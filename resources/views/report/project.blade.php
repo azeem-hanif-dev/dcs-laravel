@@ -115,7 +115,7 @@
     </div>
 
     {{-- Details Modal --}}
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black bg-opacity-50" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" @click.outside="closeModal()">
             <div class="flex items-center justify-between p-5 border-b border-gray-100">
@@ -222,7 +222,7 @@ function projectReportData() {
                 }
             } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 'all' }); this.projects = data.data || []; } catch(e) {} },
+        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
 
         viewDetails(item) {
             this.detailItem = item;

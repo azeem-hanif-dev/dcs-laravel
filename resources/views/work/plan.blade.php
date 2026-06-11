@@ -119,7 +119,7 @@
     </div>
 
     {{-- Add/Edit Modal --}}
-    <div x-show="modalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" x-transition.opacity @keydown.escape.window="closeModal()">
+    <div x-show="modalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" x-transition.opacity @keydown.escape.window="closeModal()">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto z-10" @click.outside="closeModal()">
             <div class="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white rounded-t-2xl z-10">

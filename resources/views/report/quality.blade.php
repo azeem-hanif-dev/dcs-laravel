@@ -115,7 +115,7 @@
     </div>
 
     {{-- Add/Edit Modal --}}
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-transition.opacity>
         <div class="fixed inset-0 bg-black bg-opacity-50" @click="closeModal()"></div>
         <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" @click.outside="closeModal()">
             <div class="flex items-center justify-between p-5 border-b border-gray-100">
@@ -275,12 +275,12 @@ function qualityReportData() {
                 }
             } catch(e) { console.error(e); $store.toast.error('Failed to fetch data'); } finally { this.loading = false; }
         },
-        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 'all' }); this.projects = data.data || []; } catch(e) {} },
+        async fetchProjects() { try { let data = await $store.api.get('/api/v1/project', { per_page: 500 }); this.projects = data.data || []; } catch(e) {} },
         async fetchTasks() {
             if (!this.form.project_id) { this.tasks = []; return; }
             try { let data = await $store.api.get('/api/v1/task', { project_id: this.form.project_id }); this.tasks = data.data || []; } catch(e) {}
         },
-        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 'all' }); this.workers = data.data || []; this.reviewers = data.data || []; } catch(e) {} },
+        async fetchWorkers() { try { let data = await $store.api.get('/api/v1/staff', { per_page: 500 }); this.workers = data.data || []; this.reviewers = data.data || []; } catch(e) {} },
 
         openAddModal() {
             this.editingId = null;
@@ -327,7 +327,7 @@ function qualityReportData() {
         confirmDelete(item) { this.deleteTarget = item; this.showDeleteModal = true; },
         async deleteItem() {
             this.deleting = true;
-            try { await $store.api.delete('/api/v1/quality-reports/' + this.deleteTarget.id); $store.toast.success('Inspection deleted'); this.showDeleteModal = false; this.fetchData(); }
+            try { await $store.api.del('/api/v1/quality-reports/' + this.deleteTarget.id); $store.toast.success('Inspection deleted'); this.showDeleteModal = false; this.fetchData(); }
             catch(e) { $store.toast.error(e.message || 'Delete failed'); } finally { this.deleting = false; }
         },
 
