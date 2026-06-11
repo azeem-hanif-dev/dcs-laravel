@@ -71,11 +71,36 @@ class MaterialOrderController extends Controller
     {
         $order = MaterialOrder::where('company_id', $request->company_id)->findOrFail($id);
         $data = $request->validate([
-            'status' => 'required|string|in:pending,approved,delivered,cancelled',
+            'orderDate' => 'sometimes|date',
+            'status' => 'sometimes|string|in:pending,approved,delivered,cancelled',
             'notes' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.materialId' => 'nullable|exists:materials,id',
+            'items.*.quantity' => 'nullable|integer|min:1',
+            'items.*.supplierId' => 'nullable|exists:suppliers,id',
         ]);
-        $order->update($data);
-        return $this->successResponse($order, 'Material order updated successfully');
+
+        $orderData = [];
+        if (isset($data['orderDate'])) $orderData['order_date'] = $data['orderDate'];
+        if (isset($data['status'])) $orderData['status'] = $data['status'];
+        if (array_key_exists('notes', $data)) $orderData['notes'] = $data['notes'];
+        if (!empty($orderData)) $order->update($orderData);
+
+        // Update items if provided
+        if (isset($data['items'])) {
+            $order->items()->delete();
+            foreach ($data['items'] as $item) {
+                if (!empty($item['materialId'])) {
+                    $order->items()->create([
+                        'material_id' => $item['materialId'],
+                        'quantity' => $item['quantity'] ?? 1,
+                        'supplier_id' => $item['supplierId'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        return $this->successResponse($order->load('items.material', 'items.supplier', 'orderedBy'), 'Order updated');
     }
 
     public function destroy(Request $request, $id)
@@ -86,7 +111,7 @@ class MaterialOrderController extends Controller
         return $this->successResponse(null, 'Material order deleted successfully');
     }
 
-    public function statusUpdate(Request $request, $id)
+    public function updateStatus(Request $request, $id)
     {
         $order = MaterialOrder::where('company_id', $request->company_id)->findOrFail($id);
         $data = $request->validate(['status' => 'required|string|in:pending,approved,delivered,cancelled']);
@@ -95,17 +120,21 @@ class MaterialOrderController extends Controller
 
         // Auto-update stock when purchase order is delivered
         if ($data['status'] === 'delivered' && $oldStatus !== 'delivered') {
+            $warehouseId = $order->warehouse_id ?? null;
             foreach ($order->items as $item) {
-                $stock = \App\Models\Stock::firstOrCreate(
-                    ['product_id' => $item->material_id, 'warehouse_id' => $order->warehouse_id ?? null, 'company_id' => $request->company_id],
-                    ['total_quantity' => 0, 'reserved_quantity' => 0]
-                );
-                $stock->increment('total_quantity', $item->quantity);
-
-                // Also update the material's total_quantity
+                // Update material's total_quantity
                 $material = \App\Models\Material\Material::find($item->material_id);
                 if ($material) {
                     $material->increment('total_quantity', $item->quantity);
+                }
+
+                // Update stock record if warehouse is set
+                if ($warehouseId) {
+                    $stock = \App\Models\Stock::firstOrCreate(
+                        ['product_id' => $item->material_id, 'warehouse_id' => $warehouseId, 'company_id' => $request->company_id],
+                        ['total_quantity' => 0, 'reserved_quantity' => 0]
+                    );
+                    $stock->increment('total_quantity', $item->quantity);
                 }
             }
         }

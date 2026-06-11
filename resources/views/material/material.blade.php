@@ -52,52 +52,48 @@
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
                 <thead class="table-header-branded">
                     <tr>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Category</th>
-                        <th class="px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Price</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Qty</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">Name</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">SKU</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Category</th>
+                        <th class="px-2 py-3 text-right text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Price</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider">Total</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Remaining</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider">Status</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider w-28">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     <template x-if="loading">
-                        <tr><td colspan="7" class="px-6 py-16 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <svg class="spinner w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                <span class="text-sm text-gray-400">Loading...</span>
-                            </div>
+                        <tr><td colspan="9" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3"><svg class="spinner w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><div><p class="text-sm font-medium text-gray-400">Loading data...</p><p class="text-xs text-gray-400 mt-0.5">Please wait a moment</p></div></div>
                         </td></tr>
                     </template>
                     <template x-if="!loading && items.length === 0">
-                        <tr><td colspan="7" class="px-6 py-16 text-center">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                            <p class="text-gray-500 font-medium">No materials found</p>
-                            <p class="text-sm text-gray-400 mt-1">Add your first material</p>
+                        <tr><td colspan="9" class="px-6 py-20 text-center">
+                            <div class="max-w-sm mx-auto"><svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg><h3 class="text-base font-semibold text-gray-400 mb-1">No Products Found</h3><p class="text-sm text-gray-400">Click Add Product to create one</p></div>
                         </td></tr>
                     </template>
                     <template x-for="(item, index) in items" :key="item.id">
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-3 py-3 text-sm text-gray-500 whitespace-nowrap" data-label="#" x-text="(currentPage-1)*perPage + index + 1"></td>
-                            <td class="px-3 py-3 text-sm font-medium text-gray-800 whitespace-nowrap" data-label="Name" x-text="item.materialName"></td>
-                            <td class="px-3 py-3 text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell" data-label="Category" x-text="item.category?.name || ''"></td>
-                            <td class="px-3 py-3 text-sm text-gray-600 whitespace-nowrap text-right hidden sm:table-cell" data-label="Price" x-text="'&euro;' + parseFloat(item.price||0).toFixed(2)"></td>
-                            <td class="px-3 py-3 text-sm text-gray-700 whitespace-nowrap" data-label="Qty" x-text="item.totalQuantity"></td>
-                            <td class="px-3 py-3 text-sm whitespace-nowrap" data-label="Status">
-                                <span :class="item.status==='Active'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'" class="px-2.5 py-1 rounded-full text-xs font-medium" x-text="item.status"></span>
+                            <td class="px-2 py-3 text-sm text-gray-500 whitespace-nowrap" data-label="#" x-text="(currentPage-1)*perPage + index + 1"></td>
+                            <td class="px-2 py-3 text-sm font-medium text-gray-800 whitespace-nowrap" data-label="Name" x-text="item.materialName || item.material_name"></td>
+                            <td class="px-2 py-3 text-xs font-mono text-gray-500 whitespace-nowrap hidden sm:table-cell" data-label="SKU" x-text="item.sku || '-'"></td>
+                            <td class="px-2 py-3 text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell" data-label="Category" x-text="item.category?.name || ''"></td>
+                            <td class="px-2 py-3 text-sm text-gray-600 whitespace-nowrap text-right hidden sm:table-cell" data-label="Price" x-text="'$'+parseFloat(item.price||0).toFixed(2)"></td>
+                            <td class="px-2 py-3 text-sm text-center font-semibold text-gray-700 whitespace-nowrap" data-label="Total" x-text="item.totalQuantity || item.total_quantity || 0"></td>
+                            <td class="px-2 py-3 text-center whitespace-nowrap hidden md:table-cell" data-label="Remaining">
+                                <span class="px-2 py-0.5 text-xs rounded-full font-semibold"
+                                    :class="{'bg-green-100 text-green-700': (item.totalQuantity||item.total_quantity)-(item.assignedQuantity||item.assigned_quantity) > (item.reorder_level||10), 'bg-yellow-100 text-yellow-700': (item.totalQuantity||item.total_quantity)-(item.assignedQuantity||item.assigned_quantity) > 0 && (item.totalQuantity||item.total_quantity)-(item.assignedQuantity||item.assigned_quantity) <= (item.reorder_level||10), 'bg-red-100 text-red-700': (item.totalQuantity||item.total_quantity)-(item.assignedQuantity||item.assigned_quantity) <= 0}"
+                                    x-text="(item.totalQuantity||item.total_quantity||0) - (item.assignedQuantity||item.assigned_quantity||0)"></span>
                             </td>
-                            <td class="px-3 py-3 text-center whitespace-nowrap" data-label="Actions">
+                            <td class="px-2 py-3 text-sm text-center whitespace-nowrap" data-label="Status">
+                                <span :class="(item.status||'')==='Active'?'bg-green-100 text-green-800':'bg-red-100 text-red-800'" class="px-2 py-0.5 rounded-full text-xs font-medium" x-text="item.status || 'Active'"></span>
+                            </td>
+                            <td class="px-2 py-3 text-center whitespace-nowrap" data-label="Actions">
                                 <div class="flex justify-center gap-1">
-                                    <button @click="openEditModal(item)" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </button>
-                                    <button @click="confirmDelete(item)" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Delete">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
+                                    <button @click="openEditModal(item)" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                                    <button @click="confirmDelete(item)" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                 </div>
                             </td>
                         </tr>

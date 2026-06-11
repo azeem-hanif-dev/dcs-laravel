@@ -28,10 +28,37 @@ Alpine.store('api', {
         if (t) h['Authorization'] = 'Bearer ' + t;
         return h;
     },
+    async refreshTokenSilently() {
+        const token = this.getToken();
+        if (!token) return false;
+        try {
+            const res = await fetch('/api/auth/refresh', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.status && data.S_S_Token) {
+                localStorage.setItem('S_S_Token', data.S_S_Token);
+                return true;
+            }
+        } catch(e) {}
+        return false;
+    },
     async fetch(url, opts = {}) {
         const config = { headers: this.headers(opts.isFormData), ...opts };
         delete config.isFormData;
-        const res = await fetch(url, config);
+        let res = await fetch(url, config);
+
+        // Token expired — try silent refresh before removing
+        if (res.status === 401 && this.getToken()) {
+            const refreshed = await this.refreshTokenSilently();
+            if (refreshed) {
+                // Retry with new token
+                config.headers['Authorization'] = 'Bearer ' + this.getToken();
+                res = await fetch(url, config);
+            }
+        }
+
         const text = await res.text();
         let data;
         try { data = JSON.parse(text); } catch (e) {
@@ -41,7 +68,10 @@ Alpine.store('api', {
         if (!res.ok) {
             const err = { status: res.status, ...data };
             if (res.status === 401) {
-                localStorage.removeItem('S_S_Token');
+                if (!data.expired) {
+                    // Only clear token if not expired (network/auth error)
+                    // For expired tokens, we already tried refresh
+                }
                 err.message = data.message || 'Session expired. Please login again.';
             }
             throw err;

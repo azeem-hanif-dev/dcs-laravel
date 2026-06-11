@@ -53,11 +53,19 @@ use App\Http\Controllers\Api\CompanyAdmin\Report\ProjectReportController;
 Route::prefix('auth')->group(function () {
     Route::post('/verify-company', [AuthController::class, 'verifyCompany']);
     Route::post('/login', [AuthController::class, 'loginAdmin']);
-    Route::post('/register', [AuthController::class, 'signupAdmin']);
     Route::post('/staff/login', [AuthController::class, 'loginStaff']);
     Route::post('/staff/signup', [AuthController::class, 'signupStaff']);
+    Route::post('/register', [AuthController::class, 'signupAdmin']);
+    Route::get('/companies', [AuthController::class, 'getCompanies']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password/{S_S_Token}', [AuthController::class, 'resetPassword']);
+
+    // Token management (authenticated)
+    Route::middleware('jwt.verify')->group(function () {
+        Route::post('/refresh', [AuthController::class, 'refreshToken']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get('/validate', [AuthController::class, 'validateToken']);
+    });
     Route::get('/companies', [AuthController::class, 'getCompanies']);
 });
 

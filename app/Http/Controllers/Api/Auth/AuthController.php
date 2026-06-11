@@ -312,6 +312,59 @@ class AuthController extends Controller
     }
 
     /**
+     * Refresh JWT token
+     * POST /api/auth/refresh
+     */
+    public function refreshToken(Request $request)
+    {
+        try {
+            $token = $request->bearerToken() ?? $request->S_S_Token;
+            $decoded = JWT::decode($token, new \Firebase\JWT\Key(config('app.jwt_secret'), 'HS256'));
+            if (\Illuminate\Support\Facades\DB::table('jwt_blacklist')->where('token_hash', hash('sha256', $token))->exists()) {
+                return $this->errorResponse('Token has been revoked', 401);
+            }
+            $user = User::find($decoded->id);
+            if (!$user || !$user->is_active || $user->is_delete) {
+                return $this->errorResponse('User not found or inactive', 404);
+            }
+            $newToken = $this->generateJwt(['id'=>$user->id,'username'=>$user->username,'companyId'=>$user->company_id,'userType'=>$user->role]);
+            return response()->json(['status'=>true,'S_S_Token'=>$newToken,'message'=>'Token refreshed','expiresAt'=>time()+(3*24*60*60)],200);
+        } catch (\Firebase\JWT\ExpiredException $e) {
+            return response()->json(['status'=>false,'message'=>'Token has expired, please login again'],401);
+        } catch (\Exception $e) {
+            return response()->json(['status'=>false,'message'=>'Invalid token'],401);
+        }
+    }
+
+    /**
+     * Logout - blacklist current token
+     * POST /api/auth/logout
+     */
+    public function logout(Request $request)
+    {
+        $token = $request->bearerToken() ?? $request->S_S_Token;
+        if ($token) {
+            try {
+                $decoded = JWT::decode($token, new \Firebase\JWT\Key(config('app.jwt_secret'), 'HS256'));
+                $expiresAt = isset($decoded->exp) ? date('Y-m-d H:i:s', $decoded->exp) : now()->addDays(3);
+                \Illuminate\Support\Facades\DB::table('jwt_blacklist')->insertOrIgnore(['token_hash'=>hash('sha256',$token),'expires_at'=>$expiresAt,'created_at'=>now(),'updated_at'=>now()]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::table('jwt_blacklist')->insertOrIgnore(['token_hash'=>hash('sha256',$token),'expires_at'=>now()->addDays(3),'created_at'=>now(),'updated_at'=>now()]);
+            }
+        }
+        return $this->successResponse(null, 'Logged out successfully');
+    }
+
+    /**
+     * Validate current token
+     * GET /api/auth/validate
+     */
+    public function validateToken(Request $request)
+    {
+        return $this->successResponse(['valid'=>true,'user'=>$request->auth_user->only(['id','name','username','role','company_id'])],'Token is valid');
+    }
+
+    /**
      * Get all companies for signup form
      * GET /api/auth/companies
      */

@@ -39,47 +39,45 @@
             <table class="table-card-sm min-w-full divide-y divide-gray-200">
                 <thead class="table-header-branded">
                     <tr>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">Notes</th>
-                        <th class="px-3 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-44">Actions</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Order ID</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">Date</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Items</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                        <th class="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Ordered By</th>
+                        <th class="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider w-44">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     <template x-if="loading">
-                        <tr><td colspan="5" class="px-6 py-16 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <svg class="spinner w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                <span class="text-sm text-gray-400">Loading...</span>
-                            </div>
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3"><svg class="spinner w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><div><p class="text-sm font-medium text-gray-400">Loading data...</p><p class="text-xs text-gray-400 mt-0.5">Please wait a moment</p></div></div>
                         </td></tr>
                     </template>
                     <template x-if="!loading && items.length === 0">
-                        <tr><td colspan="5" class="px-6 py-16 text-center">
-                            <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                            <p class="text-gray-500 font-medium">No orders found</p>
-                            <p class="text-sm text-gray-400 mt-1">Create your first material order</p>
+                        <tr><td colspan="7" class="px-6 py-20 text-center">
+                            <div class="max-w-sm mx-auto"><svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg><h3 class="text-base font-semibold text-gray-400 mb-1">No Purchase Orders Found</h3><p class="text-sm text-gray-400">Click Add Order to create one</p></div>
                         </td></tr>
                     </template>
                     <template x-for="(item, index) in items" :key="item.id">
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-3 py-3 text-sm text-gray-500 whitespace-nowrap" data-label="#" x-text="(currentPage-1)*perPage + index + 1"></td>
-                            <td class="px-3 py-3 text-sm text-gray-900 whitespace-nowrap" data-label="Date" x-text="item.orderDate||''"></td>
-                            <td class="px-3 py-3 text-sm whitespace-nowrap" data-label="Status">
-                                <span :class="statusBadgeClass(item.status)" class="px-2.5 py-1 rounded-full text-xs font-medium" x-text="item.status"></span>
+                            <td class="px-2 py-3 text-sm text-gray-500 whitespace-nowrap" data-label="#" x-text="(currentPage-1)*perPage + index + 1"></td>
+                            <td class="px-2 py-3 text-xs font-mono text-primary hidden sm:table-cell" data-label="Order ID" x-text="'#' + item.id"></td>
+                            <td class="px-2 py-3 text-sm text-gray-700 whitespace-nowrap" data-label="Date" x-text="item.order_date || item.orderDate || ''"></td>
+                            <td class="px-2 py-3 text-sm text-center text-gray-600 hidden sm:table-cell" data-label="Items">
+                                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-medium" x-text="(item.items?.length || 0) + ' items'"></span>
                             </td>
-                            <td class="px-3 py-3 text-sm text-gray-600 max-w-[200px] truncate hidden sm:table-cell" data-label="Notes" x-text="item.notes||''"></td>
-                            <td class="px-3 py-3 text-center whitespace-nowrap" data-label="Actions">
-                                <div class="flex justify-center gap-1 flex-wrap">
-                                    <button @click="openStatusModal(item)" class="p-1.5 rounded-lg text-yellow-600 hover:bg-yellow-50 transition-colors" title="Status">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                    </button>
+                            <td class="px-2 py-3 text-sm text-center whitespace-nowrap" data-label="Status">
+                                <span :class="statusBadgeClass(item.status)" class="px-2 py-0.5 rounded-full text-xs font-medium" x-text="item.status"></span>
+                            </td>
+                            <td class="px-2 py-3 text-sm text-gray-600 hidden md:table-cell" data-label="Ordered By" x-text="item.ordered_by?.name || item.ordered_by?.username || ''"></td>
+                            <td class="px-2 py-3 text-center whitespace-nowrap" data-label="Actions">
+                                <div class="flex justify-center gap-1">
                                     <button @click="openEditModal(item)" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button @click="openStatusModal(item)" class="p-1.5 rounded-lg text-yellow-600 hover:bg-yellow-50 transition-colors" title="Change Status">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                     </button>
                                     <button @click="confirmDelete(item)" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors" title="Delete">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -108,10 +106,6 @@
             </div>
             <form @submit.prevent="saveItem()" class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Ordered By</label>
-                    <input type="text" x-model="form.ordered_by" placeholder="Ordered by" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Order Date</label>
                     <input type="date" x-model="form.orderDate" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
                 </div>
@@ -119,10 +113,10 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
                     <select x-model="form.status" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
                         <option value="">Select Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Fulfilled">Fulfilled</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
                 <div>
@@ -136,9 +130,9 @@
                             <div class="flex items-end gap-3 bg-gray-50 p-3 rounded-xl">
                                 <div class="flex-1">
                                     <label class="block text-xs text-gray-500 mb-1">Material</label>
-                                    <select x-model="oi.material_id" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
+                                    <select x-model="oi.materialId" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
                                         <option value="">Select Material</option>
-                                        <template x-for="mat in materials" :key="mat.id"><option :value="mat.id" x-text="mat.materialName"></option></template>
+                                        <template x-for="mat in materials" :key="mat.id"><option :value="mat.id" x-text="mat.material_name || mat.materialName"></option></template>
                                     </select>
                                 </div>
                                 <div class="w-20">
@@ -184,10 +178,10 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
                     <select x-model="statusForm.status" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Fulfilled">Fulfilled</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
@@ -223,22 +217,22 @@
 @push('scripts')
 <script>
 function orderData(){return{
-    items:[],materials:[],search:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,statusModalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,form:{id:null,ordered_by:'',orderDate:'',status:'',notes:'',items:[]},statusForm:{id:null,status:'Pending'},errors:{},deleteId:null,
+    items:[],materials:[],search:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,statusModalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,form:{id:null,orderDate:'',status:'',notes:'',items:[]},statusForm:{id:null,status:'pending'},errors:{},deleteId:null,
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
     async init(){await this.fetchMaterials();this.fetchItems()},
     async fetchItems(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/material-order',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load orders')}finally{this.loading=false}},
-    async fetchMaterials(){try{var d=await Alpine.store('api').get('/api/v1/material',{per_page:100});this.materials=d.data?.data||d.data||[]}catch(e){}},
-    statusBadgeClass(s){switch(s){case'Approved':return'bg-blue-100 text-blue-800';case'Pending':return'bg-yellow-100 text-yellow-800';case'Rejected':return'bg-red-100 text-red-800';case'Fulfilled':return'bg-green-100 text-green-800';default:return'bg-gray-100 text-gray-800'}},
-    addOrderItem(){this.form.items.push({material_id:'',quantity:1,price:0})},
+    async fetchMaterials(){try{var d=await Alpine.store('api').get('/api/v1/material',{per_page:500});this.materials=d.data?.data||d.data||[]}catch(e){}},
+    statusBadgeClass(s){s=(s||'').toLowerCase();switch(s){case'approved':return'bg-blue-100 text-blue-800';case'pending':return'bg-yellow-100 text-yellow-800';case'delivered':return'bg-green-100 text-green-800';case'cancelled':return'bg-red-100 text-red-800';default:return'bg-gray-100 text-gray-800'}},
+    addOrderItem(){this.form.items.push({materialId:'',quantity:1,price:0})},
     removeOrderItem(idx){this.form.items.splice(idx,1)},
-    openAddModal(){this.isEditing=false;this.form={id:null,ordered_by:'',orderDate:'',status:'',notes:'',items:[]};this.errors={};this.modalOpen=true},
-    openEditModal(item){this.isEditing=true;this.form={id:item.id,ordered_by:item.ordered_by||'',orderDate:item.orderDate||'',status:item.status||'',notes:item.notes||'',items:(item.items||[]).map(function(i){return{material_id:i.material_id||i.materialId||'',quantity:i.quantity||1,price:i.price||0}})};this.errors={};this.modalOpen=true},
-    closeModal(){this.modalOpen=false;this.form={id:null,ordered_by:'',orderDate:'',status:'',notes:'',items:[]};this.errors={}},
-    async saveItem(){this.errors={};this.saving=true;try{if(this.isEditing){await Alpine.store('api').put('/api/v1/material-order/'+this.form.id,this.form)}else{await Alpine.store('api').post('/api/v1/material-order',this.form)};this.closeModal();Alpine.store('toast').success(this.isEditing?'Order updated':'Order created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
-    openStatusModal(item){this.statusForm={id:item.id,status:item.status||'Pending'};this.statusModalOpen=true},
-    async updateStatus(){this.saving=true;try{await Alpine.store('api').put('/api/v1/material-order/'+this.statusForm.id+'/status',{status:this.statusForm.status});this.statusModalOpen=false;Alpine.store('toast').success('Status updated');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Status update failed')}this.saving=false},
+    openAddModal(){this.isEditing=false;this.form={id:null,orderDate:'',status:'pending',notes:'',items:[]};this.errors={};if(this.materials.length===0)this.fetchMaterials();this.modalOpen=true},
+    openEditModal(item){this.isEditing=true;this.form={id:item.id,orderDate:item.order_date||item.orderDate||'',status:(item.status||'pending').toLowerCase(),notes:item.notes||'',items:(item.items||[]).map(function(i){return{materialId:i.material_id||i.materialId||'',quantity:i.quantity||1,price:i.price||0}})};this.errors={};if(this.materials.length===0)this.fetchMaterials();this.modalOpen=true},
+    closeModal(){this.modalOpen=false;this.form={id:null,orderDate:'',status:'',notes:'',items:[]};this.errors={}},
+    async saveItem(){this.errors={};if(this.form.items.length===0){Alpine.store('toast').error('Add at least one item');return}var payload={orderDate:this.form.orderDate,status:this.form.status,notes:this.form.notes||'',items:this.form.items.filter(function(i){return i.materialId}).map(function(i){return{materialId:i.materialId,quantity:i.quantity||1,supplierId:i.supplierId||null}})};this.saving=true;try{if(this.isEditing){await Alpine.store('api').put('/api/v1/material-order/'+this.form.id,payload)}else{await Alpine.store('api').post('/api/v1/material-order',payload)};this.closeModal();Alpine.store('toast').success(this.isEditing?'Order updated':'Order created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}finally{this.saving=false}},
+    openStatusModal(item){this.statusForm={id:item.id,status:(item.status||'pending').toLowerCase()};this.statusModalOpen=true},
+    async updateStatus(){this.saving=true;try{await Alpine.store('api').put('/api/v1/material-order/'+this.statusForm.id+'/status',{status:this.statusForm.status});this.statusModalOpen=false;Alpine.store('toast').success('Status updated');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Status update failed')}finally{this.saving=false}},
     confirmDelete(item){this.deleteId=item.id;this.deleteModalOpen=true},
-    async deleteItem(){this.saving=true;try{await Alpine.store('api').del('/api/v1/material-order/'+this.deleteId);this.deleteModalOpen=false;Alpine.store('toast').success('Order deleted');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Delete failed')}this.saving=false},
+    async deleteItem(){this.saving=true;try{await Alpine.store('api').del('/api/v1/material-order/'+this.deleteId);this.deleteModalOpen=false;Alpine.store('toast').success('Order deleted');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Delete failed')}finally{this.saving=false}},
     changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},
     changePerPage(n){n=parseInt(n);if(!n||n===this.perPage)return;this.perPage=n;this.currentPage=1;this.fetchItems()}
 }}
