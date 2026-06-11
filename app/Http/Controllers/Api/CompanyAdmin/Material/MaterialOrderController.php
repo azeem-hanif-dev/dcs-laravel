@@ -90,7 +90,26 @@ class MaterialOrderController extends Controller
     {
         $order = MaterialOrder::where('company_id', $request->company_id)->findOrFail($id);
         $data = $request->validate(['status' => 'required|string|in:pending,approved,delivered,cancelled']);
+        $oldStatus = $order->status;
         $order->update($data);
+
+        // Auto-update stock when purchase order is delivered
+        if ($data['status'] === 'delivered' && $oldStatus !== 'delivered') {
+            foreach ($order->items as $item) {
+                $stock = \App\Models\Stock::firstOrCreate(
+                    ['product_id' => $item->material_id, 'warehouse_id' => $order->warehouse_id ?? null, 'company_id' => $request->company_id],
+                    ['total_quantity' => 0, 'reserved_quantity' => 0]
+                );
+                $stock->increment('total_quantity', $item->quantity);
+
+                // Also update the material's total_quantity
+                $material = \App\Models\Material\Material::find($item->material_id);
+                if ($material) {
+                    $material->increment('total_quantity', $item->quantity);
+                }
+            }
+        }
+
         return $this->successResponse($order, 'Order status updated successfully');
     }
 }

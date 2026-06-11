@@ -17,6 +17,16 @@ use App\Http\Controllers\Api\CompanyAdmin\Material\MaterialController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\SupplierController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\DistributorController;
 use App\Http\Controllers\Api\CompanyAdmin\Material\MaterialOrderController;
+use App\Http\Controllers\Api\CompanyAdmin\WarehouseController;
+use App\Http\Controllers\Api\CompanyAdmin\SalesmanController;
+use App\Http\Controllers\Api\CompanyAdmin\ShopController;
+use App\Http\Controllers\Api\CompanyAdmin\PurchaseReturnController;
+use App\Http\Controllers\Api\CompanyAdmin\SalesReturnController;
+use App\Http\Controllers\Api\CompanyAdmin\SalesOrderController;
+use App\Http\Controllers\Api\CompanyAdmin\InvoiceController;
+use App\Http\Controllers\Api\CompanyAdmin\PaymentController;
+use App\Http\Controllers\Api\CompanyAdmin\DeliveryController;
+use App\Http\Controllers\Api\CompanyAdmin\StockController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\JobController;
 use App\Http\Controllers\Api\CompanyAdmin\Project\ProjectMaterialAssignmentController;
@@ -92,9 +102,10 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     Route::get('distributor/supplier/{supplierId}', [DistributorController::class, 'bySupplier']);
     Route::apiResource('distributor', DistributorController::class);
 
-    // Material Orders
+    // Material Orders (Purchase Orders)
     Route::put('material-order/{id}/status', [MaterialOrderController::class, 'updateStatus']);
     Route::apiResource('material-order', MaterialOrderController::class);
+    Route::apiResource('purchase-order', MaterialOrderController::class); // alias
 
     // Project
     Route::get('project/worker', [ProjectController::class, 'workers']);
@@ -169,6 +180,44 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     // Permission
     Route::get('permission/by-admin', [PermissionController::class, 'byAdmin']);
     Route::apiResource('permission', PermissionController::class);
+
+    // ===== NEW: Distributor Management Modules =====
+
+    // Warehouses
+    Route::apiResource('warehouse', WarehouseController::class);
+
+    // Salesmen
+    Route::apiResource('salesman', SalesmanController::class);
+
+    // Shops
+    Route::apiResource('shop', ShopController::class);
+
+    // Sales Orders
+    Route::put('sales-order/{id}/status', [SalesOrderController::class, 'updateStatus']);
+    Route::apiResource('sales-order', SalesOrderController::class);
+
+    // Invoices
+    Route::put('invoice/{id}/status', [InvoiceController::class, 'updateStatus']);
+    Route::apiResource('invoice', InvoiceController::class);
+
+    // Payments
+    Route::apiResource('payment', PaymentController::class);
+
+    // Deliveries
+    Route::put('delivery/{id}/status', [DeliveryController::class, 'updateStatus']);
+    Route::apiResource('delivery', DeliveryController::class);
+
+    // Sales Returns
+    Route::put('sales-return/{id}/status', [SalesReturnController::class, 'updateStatus']);
+    Route::apiResource('sales-return', SalesReturnController::class);
+
+    // Purchase Returns
+    Route::put('purchase-return/{id}/status', [PurchaseReturnController::class, 'updateStatus']);
+    Route::apiResource('purchase-return', PurchaseReturnController::class);
+
+    // Stock
+    Route::get('stock/overview', [StockController::class, 'overview']);
+    Route::post('stock/adjust', [StockController::class, 'adjust']);
 });
 
 // *************************************** PUBLIC ROUTES (no auth required) ***************************************

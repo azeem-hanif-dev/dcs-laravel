@@ -15,55 +15,61 @@
             @php
             $currentRoute = request()->path();
             $navLinks = [
-                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard' , 'isPage' => true],
+                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard', 'isPage' => true],
                 [
-                    'title' => 'Projects', 'icon' => 'factory',
+                    'title' => 'Sales', 'icon' => 'cart',
                     'subLinks' => [
-                        ['title' => 'Project Management', 'path' => 'company_admin/project_management'],
-                        ['title' => 'Work Plan', 'path' => 'company_admin/plan_management'],
+                        ['title' => 'Shops / Retailers', 'path' => 'company_admin/shops'],
+                        ['title' => 'Sales Orders', 'path' => 'company_admin/sales_orders'],
+                        ['title' => 'Invoices', 'path' => 'company_admin/invoices'],
+                        ['title' => 'Payments', 'path' => 'company_admin/payments'],
+                        ['title' => 'Deliveries', 'path' => 'company_admin/deliveries'],
+                        ['title' => 'Salesmen', 'path' => 'company_admin/salesmen'],
+                        ['title' => 'Sales Returns', 'path' => 'company_admin/sales_returns'],
                     ]
                 ],
                 [
-                    'title' => 'HR', 'icon' => 'users',
+                    'title' => 'Inventory', 'icon' => 'boxes',
                     'subLinks' => [
-                        ['title' => 'Staff Roles', 'path' => 'company_admin/staff_role_management'],
-                        ['title' => 'Staff', 'path' => 'company_admin/staff_management'],
+                        ['title' => 'Products', 'path' => 'company_admin/material'],
+                        ['title' => 'Categories', 'path' => 'company_admin/material_category'],
+                        ['title' => 'Warehouses', 'path' => 'company_admin/warehouses'],
+                        ['title' => 'Stock Overview', 'path' => 'company_admin/stock_overview'],
+                    ]
+                ],
+                [
+                    'title' => 'Procurement', 'icon' => 'truck',
+                    'subLinks' => [
+                        ['title' => 'Suppliers', 'path' => 'company_admin/suppliers'],
+                        ['title' => 'Distributors', 'path' => 'company_admin/distributors'],
+                        ['title' => 'Purchase Orders', 'path' => 'company_admin/material_order'],
+                        ['title' => 'Purchase Returns', 'path' => 'company_admin/purchase_returns'],
                     ]
                 ],
                 [
                     'title' => 'Customers', 'icon' => 'user',
                     'subLinks' => [
                         ['title' => 'Customer Management', 'path' => 'company_admin/customer_management'],
-                        ['title' => 'Quotations', 'path' => 'company_admin/qoutation_management'],
                     ]
                 ],
                 [
-                    'title' => 'Materials', 'icon' => 'boxes',
+                    'title' => 'Reports', 'icon' => 'chart',
                     'subLinks' => [
-                        ['title' => 'Suppliers', 'path' => 'company_admin/suppliers'],
-                        ['title' => 'Distributors', 'path' => 'company_admin/distributors'],
-                        ['title' => 'Categories', 'path' => 'company_admin/material_category'],
-                        ['title' => 'Materials', 'path' => 'company_admin/material'],
-                        ['title' => 'Material Orders', 'path' => 'company_admin/material_order'],
-                    ]
-                ],
-                [
-                    'title' => 'Reports', 'icon' => 'clipboard',
-                    'subLinks' => [
-                        ['title' => 'Quality Controller', 'path' => 'company_admin/quality_controller'],
-                        ['title' => 'Worker Report', 'path' => 'company_admin/worker_report'],
-                        ['title' => 'Project Report', 'path' => 'company_admin/project_report'],
+                        ['title' => 'Business Reports', 'path' => 'company_admin/reports'],
+                        ['title' => 'Quality Reports', 'path' => 'company_admin/quality_controller'],
+                        ['title' => 'Worker Reports', 'path' => 'company_admin/worker_report'],
+                        ['title' => 'Project Reports', 'path' => 'company_admin/project_report'],
                     ]
                 ],
             ];
 
             $icons = [
                 'layout-dashboard' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>',
-                'factory' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>',
-                'users' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>',
-                'user' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+                'cart' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>',
                 'boxes' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10m-8-4l8-4"/></svg>',
-                'clipboard' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>',
+                'truck' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>',
+                'user' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+                'chart' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
             ];
             @endphp
 
@@ -81,7 +87,6 @@
                 @endphp
                 <div>
                     @if($isPage)
-                        {{-- Direct page link (Dashboard) --}}
                         <a href="{{ url($linkPath) }}"
                             class="group w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium
                             {{ $isActive ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-100' }}">

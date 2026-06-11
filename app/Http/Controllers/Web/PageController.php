@@ -26,4 +26,18 @@ class PageController extends Controller
     public function projectReport() { return view('report.project'); }
     public function profile() { return view('profile'); }
     public function underDev() { return view('underdev'); }
+
+    // NEW: Distributor management views
+    public function shops() { return view('shop.index'); }
+    public function salesOrders() { return view('sales-order.index'); }
+    public function salesOrdersCreate() { return view('sales-order.create'); }
+    public function invoices() { return view('invoice.index'); }
+    public function payments() { return view('payment.index'); }
+    public function deliveries() { return view('delivery.index'); }
+    public function salesmen() { return view('salesman.index'); }
+    public function warehouses() { return view('warehouse.index'); }
+    public function stockOverview() { return view('stock.index'); }
+    public function salesReturns() { return view('sales-return.index'); }
+    public function purchaseReturns() { return view('purchase-return.index'); }
+    public function reports() { return view('report.index'); }
 }
