@@ -19,7 +19,7 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate(['name' => 'required|in:Chemical,Hard Material,Textile,Paper,Machine']);
+        $data = $request->validate(['name' => 'required|string|max:255']);
         $data['user_id'] = $request->auth_user->id;
         $data['company_id'] = $request->company_id;
         $category = Category::create($data);
@@ -35,7 +35,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $category = Category::where('company_id', $request->company_id)->findOrFail($id);
-        $data = $request->validate(['name' => 'required|in:Chemical,Hard Material,Textile,Paper,Machine']);
+        $data = $request->validate(['name' => 'required|string|max:255']);
         $category->update($data);
         return $this->successResponse($category, 'Category updated successfully');
     }

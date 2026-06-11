@@ -48,7 +48,7 @@ class MaterialOrderController extends Controller
 
         foreach ($items as $item) {
             MaterialOrderItem::create([
-                'material_order_id' => $order->id,
+                'purchase_order_id' => $order->id,
                 'material_id' => $item['materialId'],
                 'quantity' => $item['quantity'],
                 'supplier_id' => $item['supplierId'] ?? null,

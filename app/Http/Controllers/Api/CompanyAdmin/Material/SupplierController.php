@@ -23,11 +23,17 @@ class SupplierController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'contactPerson' => 'nullable|string',
+            'contact_person' => 'nullable|string',
             'contactNumber' => 'nullable|string',
+            'contact_number' => 'nullable|string',
             'address' => 'nullable|string',
+            'company_name' => 'nullable|string',
+            'tax_number' => 'nullable|string',
+            'payment_terms' => 'nullable|string',
         ]);
         $data['user_id'] = $request->auth_user->id;
         $data['company_id'] = $request->company_id;
+        // Map camelCase to snake_case
         if (isset($data['contactPerson'])) { $data['contact_person'] = $data['contactPerson']; unset($data['contactPerson']); }
         if (isset($data['contactNumber'])) { $data['contact_number'] = $data['contactNumber']; unset($data['contactNumber']); }
         $supplier = Supplier::create($data);

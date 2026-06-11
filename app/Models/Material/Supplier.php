@@ -10,7 +10,7 @@ use App\Models\Company;
 
 class Supplier extends Model
 {
-    protected $fillable = ['name', 'email', 'contact_person', 'contact_number', 'address', 'user_id', 'company_id', 'is_active'];
+    protected $fillable = ['name', 'email', 'contact_person', 'contact_number', 'address', 'company_name', 'tax_number', 'payment_terms', 'user_id', 'company_id', 'is_active'];
     protected $casts = ['is_active' => 'boolean'];
 
     public function user(): BelongsTo { return $this->belongsTo(Admin::class, 'user_id'); }
