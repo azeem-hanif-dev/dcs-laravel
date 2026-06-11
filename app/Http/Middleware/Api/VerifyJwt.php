@@ -5,7 +5,7 @@ namespace App\Http\Middleware\Api;
 use Closure;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use App\Models\StaffManagement\Staff;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class VerifyJwt
@@ -27,17 +27,17 @@ class VerifyJwt
 
         try {
             $decoded = JWT::decode($token, new Key(config('app.jwt_secret'), 'HS256'));
-            $staff = Staff::find($decoded->id);
+            $user = User::find($decoded->id);
 
-            if (!$staff) {
+            if (!$user) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Admin not found or Invalid S_S_Token',
+                    'message' => 'User not found or Invalid S_S_Token',
                 ], 404);
             }
 
-            $request->merge(['auth_user' => $staff]);
-            $request->merge(['company_id' => $staff->company_id]);
+            $request->merge(['auth_user' => $user]);
+            $request->merge(['company_id' => $user->company_id]);
 
         } catch (\Exception $e) {
             return response()->json([

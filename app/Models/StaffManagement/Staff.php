@@ -2,22 +2,11 @@
 
 namespace App\Models\StaffManagement;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Admin;
-use App\Models\Company;
-
-class Staff extends Authenticatable
+/**
+ * @deprecated Use User model directly. Kept for backward compatibility.
+ */
+class Staff extends \App\Models\User
 {
-    use HasApiTokens;
-
-    protected $table = 'staff';
-    protected $fillable = ['user_id', 'company_id', 'name', 'username', 'email', 'employee_code', 'phone', 'designation', 'job_type_id', 'permission', 'gender', 'visa_expiry', 'health_expiry', 'passport_expiry', 'password', 'mobile_signup'];
-    protected $hidden = ['password'];
-    protected $casts = ['permission' => 'array', 'mobile_signup' => 'boolean', 'visa_expiry' => 'date', 'health_expiry' => 'date', 'passport_expiry' => 'date'];
-
-    public function user(): BelongsTo { return $this->belongsTo(Admin::class, 'user_id'); }
-    public function company(): BelongsTo { return $this->belongsTo(Company::class); }
-    public function jobType(): BelongsTo { return $this->belongsTo(StaffRole::class, 'job_type_id'); }
+    // Alias for the unified users table
+    // All existing code referencing Staff will still work
 }

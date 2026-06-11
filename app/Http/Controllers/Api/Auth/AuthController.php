@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
-use App\Models\Admin;
+use App\Models\User;
 use App\Models\Company;
-use App\Models\StaffManagement\Staff;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -33,12 +32,13 @@ class AuthController extends Controller
             return $this->errorResponse('Company not found or inactive', 404);
         }
 
-        $adminExists = Admin::where('company_id', $company->id)
+        $userExists = User::where('company_id', $company->id)
             ->where('is_active', true)
             ->where('is_delete', false)
+            ->whereIn('role', ['superadmin', 'admin'])
             ->exists();
 
-        if (!$adminExists) {
+        if (!$userExists) {
             return $this->errorResponse('No active users found for this company', 404);
         }
 
@@ -60,35 +60,31 @@ class AuthController extends Controller
             'companyId' => 'required',
         ]);
 
-        $admin = Staff::where('username', strtolower($request->username))
+        $user = User::where('username', strtolower($request->username))
             ->where('company_id', $request->companyId)
+            ->whereIn('role', ['superadmin', 'admin'])
+            ->where('is_active', true)
             ->with('company:id,name')
             ->first();
 
-        if (!$admin) {
+        if (!$user) {
             return $this->errorResponse('Invalid username or password', 404);
         }
 
-        $role = strtolower($admin->designation ?? '');
-
-        if ($role === 'supervisor' || $role === 'worker') {
-            return $this->errorResponse('Access denied: Supervisor and Worker are not allowed to log in.', 404);
-        }
-
-        if (!Hash::check($request->password, $admin->password)) {
+        if (!Hash::check($request->password, $user->password)) {
             return $this->errorResponse('Invalid username or password', 404);
         }
 
         $token = $this->generateJwt([
-            'id' => $admin->id,
-            'username' => $admin->username,
-            'companyId' => $admin->company_id,
-            'userType' => $admin->designation,
+            'id' => $user->id,
+            'username' => $user->username,
+            'companyId' => $user->company_id,
+            'userType' => $user->role,
         ]);
 
-        $admin->makeHidden(['password']);
+        $user->makeHidden(['password']);
 
-        return $this->authResponse($token, $admin);
+        return $this->authResponse($token, $user);
     }
 
     /**
@@ -120,11 +116,11 @@ class AuthController extends Controller
         }
 
         $admin = Admin::create([
-            'full_name' => $request->fullName,
+            'name' => $request->fullName,
             'email' => $request->email,
             'username' => strtolower($request->username),
             'password' => Hash::make($request->password),
-            'contact_number' => $request->contactNumber,
+            'phone' => $request->contactNumber,
             'gender' => $request->gender,
             'role' => $request->role,
             'company_id' => $request->companyId,
