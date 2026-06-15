@@ -6,21 +6,38 @@
     {{-- Custom login logo animation styles --}}
     <style>
         @keyframes logo-glow {
-            0%, 100% { transform: scale(1); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 20px rgba(46,168,250,0.4)); }
-            50% { transform: scale(1.06); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 35px rgba(46,168,250,0.7)); }
+            0%, 100% { transform: scale(1); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 18px rgba(46,168,250,0.5)) drop-shadow(0 0 40px rgba(46,168,250,0.3)); }
+            50%      { transform: scale(1.08); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 28px rgba(46,168,250,0.9)) drop-shadow(0 0 60px rgba(46,168,250,0.5)); }
         }
         .login-logo-animate {
             animation: logo-glow 2.5s ease-in-out infinite;
         }
         @keyframes logo-ring-pulse {
-            0%, 100% { transform: scale(0.9); opacity: 0.15; }
-            50% { transform: scale(1.15); opacity: 0.35; }
+            0%, 100% { transform: scale(0.85); opacity: 0.2; border-color: rgba(46,168,250,0.4); box-shadow: 0 0 15px rgba(46,168,250,0.1); }
+            50%      { transform: scale(1.2); opacity: 0.6; border-color: rgba(46,168,250,0.9); box-shadow: 0 0 35px rgba(46,168,250,0.4); }
         }
         .login-logo-ring {
             animation: logo-ring-pulse 2.5s ease-in-out infinite;
         }
         .login-logo-ring-delayed {
-            animation: logo-ring-pulse 2.5s ease-in-out infinite 0.6s;
+            animation: logo-ring-pulse 2.5s ease-in-out infinite 0.7s;
+        }
+        @keyframes logo-spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .login-logo-spin {
+            animation: logo-spin 8s linear infinite;
+        }
+        .login-logo-spin-reverse {
+            animation: logo-spin 10s linear infinite reverse;
+        }
+        @keyframes logo-blur-breathe {
+            0%, 100% { transform: scale(0.9); opacity: 0.3; }
+            50%      { transform: scale(1.4); opacity: 0.7; }
+        }
+        .login-logo-blur {
+            animation: logo-blur-breathe 3s ease-in-out infinite;
         }
     </style>
 
@@ -49,12 +66,16 @@
                 {{-- Logo with animated glow rings --}}
                 <div class="flex justify-center mb-8">
                     <div class="relative flex items-center justify-center">
-                        {{-- Outer glow ring 1 --}}
-                        <div class="absolute w-28 h-28 rounded-full border border-primary/20 login-logo-ring"></div>
-                        {{-- Outer glow ring 2 (delayed) --}}
-                        <div class="absolute w-36 h-36 rounded-full border border-primary/10 login-logo-ring-delayed"></div>
-                        {{-- Blur glow --}}
-                        <div class="absolute w-20 h-20 bg-primary/30 rounded-full blur-2xl animate-pulse"></div>
+                        {{-- Spinning gradient arc --}}
+                        <div class="absolute w-38 h-38 rounded-full border-[2px] border-transparent border-t-primary border-r-primary/50 login-logo-spin"></div>
+                        {{-- Reverse spinning arc --}}
+                        <div class="absolute w-32 h-32 rounded-full border-[1.5px] border-transparent border-b-primary/70 border-l-primary/25 login-logo-spin-reverse"></div>
+                        {{-- Pulsing ring 1 --}}
+                        <div class="absolute w-28 h-28 rounded-full border-2 login-logo-ring"></div>
+                        {{-- Pulsing ring 2 (delayed) --}}
+                        <div class="absolute w-34 h-34 rounded-full border login-logo-ring-delayed"></div>
+                        {{-- Center soft glow --}}
+                        <div class="absolute w-24 h-24 bg-primary/40 rounded-full blur-2xl login-logo-blur"></div>
                         {{-- Logo --}}
                         <img src="/common/distributor-logo.svg" alt="Distributor Logo"
                             class="relative h-16 sm:h-20 w-auto login-logo-animate" />
