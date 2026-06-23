@@ -13,11 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'verify.jwt' => \App\Http\Middleware\Api\VerifyJwt::class,
-            'auth.user' => \App\Http\Middleware\Api\AuthenticateUser::class,
-            'company.filter' => \App\Http\Middleware\Api\CompanyFilter::class,
+            'verify.jwt'      => \App\Http\Middleware\Api\VerifyJwt::class,
+            'auth.user'       => \App\Http\Middleware\Api\AuthenticateUser::class,
+            'company.filter'  => \App\Http\Middleware\Api\CompanyFilter::class,
             'check.permission' => \App\Http\Middleware\Api\CheckPermission::class,
-            'web.auth' => \App\Http\Middleware\WebAuth::class,
+            'check.module'    => \App\Http\Middleware\Api\CheckModuleAccess::class,
+            'web.auth'        => \App\Http\Middleware\WebAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

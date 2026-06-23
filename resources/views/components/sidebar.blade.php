@@ -1,5 +1,31 @@
 {{-- resources/views/components/sidebar.blade.php --}}
-<aside x-data="{ expandedMenu: '{{ session('expanded_menu', '') }}' }"
+<aside x-data="{ 
+    expandedMenu: '{{ session('expanded_menu', '') }}',
+    allowedModules: ['dashboard','sales','inventory','procurement','customers','reports'],
+    
+    async init() {
+        try {
+            const token = localStorage.getItem('S_S_Token');
+            if (!token) return;
+            const res = await fetch('/api/v1/me/permissions', {
+                headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+            if (data.status && Array.isArray(data.data?.modules)) {
+                this.allowedModules = data.data.modules;
+            }
+        } catch (e) {
+            // Fallback: read from localStorage user object
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (Array.isArray(user.allowed_modules) && user.allowed_modules.length > 0) {
+                    this.allowedModules = user.allowed_modules;
+                }
+            } catch (_) {}
+        }
+    }
+}"
+    x-init="init()"
     class="fixed top-0 left-0 z-40 h-screen bg-white shadow-xl sidebar-transition w-[17rem] sm:w-[19rem] flex flex-col font-urbanist -translate-x-full lg:translate-x-0"
     :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
     @click.outside="sidebarOpen = false">
@@ -15,9 +41,9 @@
             @php
             $currentRoute = request()->path();
             $navLinks = [
-                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard', 'isPage' => true],
+                ['title' => 'Dashboard', 'path' => 'company_admin', 'icon' => 'layout-dashboard', 'moduleKey' => 'dashboard', 'isPage' => true],
                 [
-                    'title' => 'Sales', 'icon' => 'cart',
+                    'title' => 'Sales', 'icon' => 'cart', 'moduleKey' => 'sales',
                     'subLinks' => [
                         ['title' => 'Shops / Retailers', 'path' => 'company_admin/shops'],
                         ['title' => 'Sales Orders', 'path' => 'company_admin/sales_orders'],
@@ -29,7 +55,7 @@
                     ]
                 ],
                 [
-                    'title' => 'Inventory', 'icon' => 'boxes',
+                    'title' => 'Inventory', 'icon' => 'boxes', 'moduleKey' => 'inventory',
                     'subLinks' => [
                         ['title' => 'Products', 'path' => 'company_admin/material'],
                         ['title' => 'Categories', 'path' => 'company_admin/material_category'],
@@ -38,7 +64,7 @@
                     ]
                 ],
                 [
-                    'title' => 'Procurement', 'icon' => 'truck',
+                    'title' => 'Procurement', 'icon' => 'truck', 'moduleKey' => 'procurement',
                     'subLinks' => [
                         ['title' => 'Suppliers', 'path' => 'company_admin/suppliers'],
                         ['title' => 'Distributors', 'path' => 'company_admin/distributors'],
@@ -47,13 +73,13 @@
                     ]
                 ],
                 [
-                    'title' => 'Customers', 'icon' => 'user',
+                    'title' => 'Customers', 'icon' => 'user', 'moduleKey' => 'customers',
                     'subLinks' => [
                         ['title' => 'Customer Management', 'path' => 'company_admin/customer_management'],
                     ]
                 ],
                 [
-                    'title' => 'Reports', 'icon' => 'chart',
+                    'title' => 'Reports', 'icon' => 'chart', 'moduleKey' => 'reports',
                     'subLinks' => [
                         ['title' => 'Business Reports', 'path' => 'company_admin/reports'],
                         ['title' => 'Quality Reports', 'path' => 'company_admin/quality_controller'],
@@ -78,6 +104,7 @@
                     $hasSubLinks = isset($link['subLinks']);
                     $isPage = isset($link['isPage']) && $link['isPage'];
                     $linkPath = $link['path'] ?? '';
+                    $moduleKey = $link['moduleKey'] ?? '';
                     $isActive = $currentRoute === $linkPath;
                     if ($hasSubLinks) {
                         foreach ($link['subLinks'] as $sub) {
@@ -85,7 +112,8 @@
                         }
                     }
                 @endphp
-                <div>
+                <div x-show="!{{ json_encode($moduleKey) }} || allowedModules.includes({{ json_encode($moduleKey) }})"
+                    x-transition>
                     @if($isPage)
                         <a href="{{ url($linkPath) }}"
                             class="group w-full flex items-center gap-3 p-3 rounded-xl transition-all font-medium

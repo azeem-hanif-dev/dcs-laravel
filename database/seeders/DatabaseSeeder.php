@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\Admin;
+use App\Models\User;
 use App\Models\Company;
 use App\Models\Permission;
-use App\Models\StaffManagement\Staff;
+use App\Models\Material\Distributor;
+use App\Models\Material\Supplier;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -19,36 +20,23 @@ class DatabaseSeeder extends Seeder
             ['is_active' => true, 'is_delete' => false]
         );
 
-        $superAdmin = Admin::firstOrCreate(
+        $superAdmin = User::firstOrCreate(
             ['username' => 'superadmin', 'company_id' => $demoCompany->id],
             [
-                'full_name' => 'Super Admin',
-                'password' => Hash::make('Admin@123'),
-                'email' => 'superadmin@demo.com',
-                'contact_number' => '9999999999',
-                'role' => 'superAdmin',
-                'gender' => 'Male',
-                'is_active' => true,
-                'is_delete' => false,
-            ]
-        );
-
-        Staff::firstOrCreate(
-            ['username' => 'superadmin', 'company_id' => $demoCompany->id],
-            [
-                'user_id' => $superAdmin->id,
-                'name' => 'Super Admin',
-                'password' => Hash::make('Admin@123'),
-                'email' => 'superadmin@demo.com',
-                'employee_code' => 'SA-001',
-                'phone' => '9999999999',
-                'designation' => 'admin',
+                'name'       => 'Super Admin',
+                'password'   => Hash::make('Admin@123'),
+                'email'      => 'superadmin@demo.com',
+                'phone'      => '9999999999',
+                'role'       => 'superadmin',
+                'gender'     => 'Male',
+                'is_active'  => true,
+                'is_delete'  => false,
             ]
         );
 
         // Super admin permissions — full access
         Permission::firstOrCreate(
-            ['role' => 'superAdmin'],
+            ['role' => 'superadmin'],
             [
                 'permissions' => [
                     'product'       => ['create' => true, 'update' => true, 'statusChange' => true],
@@ -59,35 +47,22 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // ── Test Company (Staff Login) ──
+        // ── Test Company ──
         $testCompany = Company::firstOrCreate(
             ['name' => 'Test Company'],
             ['is_active' => true, 'is_delete' => false]
         );
 
-        $testAdmin = Admin::firstOrCreate(
+        User::firstOrCreate(
             ['username' => 'testadmin', 'company_id' => $testCompany->id],
             [
-                'full_name' => 'Test Admin',
-                'password' => Hash::make('Test@1234'),
-                'email' => 'admin@test.com',
-                'contact_number' => '1234567890',
-                'role' => 'admin',
-                'is_active' => true,
-                'is_delete' => false,
-            ]
-        );
-
-        Staff::firstOrCreate(
-            ['username' => 'teststaff', 'company_id' => $testCompany->id],
-            [
-                'user_id' => $testAdmin->id,
-                'name' => 'Test Staff',
-                'password' => Hash::make('Test@1234'),
-                'email' => 'staff@test.com',
-                'employee_code' => 'EMP001',
-                'phone' => '1234567890',
-                'designation' => 'admin',
+                'name'       => 'Test Admin',
+                'password'   => Hash::make('Test@1234'),
+                'email'      => 'admin@test.com',
+                'phone'      => '1234567890',
+                'role'       => 'admin',
+                'is_active'  => true,
+                'is_delete'  => false,
             ]
         );
 
@@ -101,6 +76,50 @@ class DatabaseSeeder extends Seeder
                     'subCategory'   => ['create' => true, 'update' => true],
                     'event'         => ['create' => true, 'update' => true, 'statusChange' => true],
                 ],
+            ]
+        );
+
+        // ── Demo Distributor with Login ──
+        // Create a demo supplier first (needed for FK)
+        $demoSupplier = Supplier::firstOrCreate(
+            ['name' => 'Demo Supplier', 'company_id' => $demoCompany->id],
+            [
+                'email'          => 'supplier@demo.com',
+                'user_id'        => $superAdmin->id,
+                'contact_number' => '9999999998',
+            ]
+        );
+
+        $distributor = Distributor::firstOrCreate(
+            ['name' => 'Demo Distributor', 'company_id' => $demoCompany->id],
+            [
+                'email'            => 'distributor@demo.com',
+                'contact_person'   => 'John Distributor',
+                'contact_number'   => '9999999997',
+                'supplier_id'      => $demoSupplier->id,
+                'user_id'          => $superAdmin->id,
+                'is_active'        => true,
+                'module_permissions' => [
+                    'sales'       => true,
+                    'inventory'   => false,
+                    'procurement' => true,
+                    'customers'   => true,
+                    'reports'     => false,
+                ],
+            ]
+        );
+
+        // Create login user for the distributor
+        User::firstOrCreate(
+            ['username' => 'distributor', 'company_id' => $demoCompany->id],
+            [
+                'name'            => 'Demo Distributor',
+                'email'           => 'distributor@demo.com',
+                'password'        => Hash::make('Dist@1234'),
+                'role'            => 'distributor',
+                'distributor_id'  => $distributor->id,
+                'is_active'       => true,
+                'is_delete'       => false,
             ]
         );
     }

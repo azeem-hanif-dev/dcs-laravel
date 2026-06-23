@@ -97,6 +97,54 @@ Alpine.store('api', {
     async del(url) { return this.fetch(url, { method: 'DELETE' }); }
 });
 
+// ─── Module Permissions Store ────────────────────────────
+// Caches the allowedModules list so the sidebar can filter links
+// and pages can guard UI elements without re-fetching.
+Alpine.store('modules', {
+    allowed: [],
+    loading: false,
+    loaded: false,
+
+    /** Fetch from API (cache in memory + localStorage fallback) */
+    async load() {
+        if (this.loaded) return this.allowed;
+        this.loading = true;
+        try {
+            const data = await Alpine.store('api').get('/api/v1/me/permissions');
+            if (data && data.status && Array.isArray(data.data?.modules)) {
+                this.allowed = data.data.modules;
+            }
+        } catch (e) {
+            // Fallback: read modules from user object in localStorage
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                if (Array.isArray(user.allowed_modules)) {
+                    this.allowed = user.allowed_modules;
+                }
+            } catch (_) { /* ignore */ }
+        }
+        // Safety net: if still empty, show all modules (prevents blank sidebar)
+        if (this.allowed.length === 0) {
+            this.allowed = ['dashboard', 'sales', 'inventory', 'procurement', 'customers', 'reports'];
+        }
+        this.loaded = true;
+        this.loading = false;
+        return this.allowed;
+    },
+
+    /** Check if a specific module key is allowed */
+    can(module) {
+        return this.allowed.includes(module);
+    },
+
+    /** Reset cache (called on logout) */
+    reset() {
+        this.allowed = [];
+        this.loaded = false;
+        this.loading = false;
+    }
+});
+
 // Utility: parse API response into paginated items
 // Handles: Laravel paginated, Laravel non-paginated, plain arrays, wrapped objects
 function parsePaginationResponse(data, perPage) {

@@ -1,8 +1,36 @@
 {{-- resources/views/components/navbar.blade.php --}}
-<div class="bg-primary text-white h-full flex justify-between items-center rounded-b-lg px-4 sm:px-6 py-3 sm:py-4 shadow-md font-urbanist" x-data="{ profileOpen: false }">
-    <h2 class="text-base sm:text-xl font-semibold truncate mr-2">
-        Welcome {{ session('company_name', 'User') }}
-    </h2>
+<div class="bg-primary text-white h-full flex justify-between items-center rounded-b-lg px-4 sm:px-6 py-3 sm:py-4 shadow-md font-urbanist" 
+    x-data="{ 
+        profileOpen: false,
+        userName: '',
+        userRole: '',
+        companyName: '',
+        
+        loadUserInfo() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                const company = JSON.parse(localStorage.getItem('company') || '{}');
+                this.userName = user.name || user.full_name || user.username || 'User';
+                this.userRole = user.role || '';
+                this.companyName = company.companyName || user.company?.name || '{{ session('company_name', '') }}';
+            } catch(e) {
+                this.userName = '{{ session('username', 'User') }}';
+                this.companyName = '{{ session('company_name', '') }}';
+            }
+        }
+    }" x-init="loadUserInfo()">
+    <div>
+        <h2 class="text-base sm:text-xl font-semibold truncate mr-2">
+            Welcome <span x-text="userName"></span>
+        </h2>
+        <p class="text-xs text-white/70 mt-0.5">
+            <span x-text="companyName"></span>
+            <template x-if="userRole">
+                <span class="ml-1 px-1.5 py-0.5 bg-white/15 rounded text-[10px] uppercase tracking-wide" 
+                    x-text="userRole"></span>
+            </template>
+        </p>
+    </div>
 
     <div class="flex items-center gap-2 sm:gap-4">
         {{-- Language Selector --}}
@@ -24,9 +52,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
-                <span class="hidden md:inline max-w-[15ch] truncate capitalize pr-2">
-                    {{ session('username', 'User') }}
-                </span>
+                <span class="hidden md:inline max-w-[15ch] truncate capitalize pr-2" x-text="userName"></span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>

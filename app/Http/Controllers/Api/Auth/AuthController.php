@@ -35,7 +35,7 @@ class AuthController extends Controller
         $userExists = User::where('company_id', $company->id)
             ->where('is_active', true)
             ->where('is_delete', false)
-            ->whereIn('role', ['superadmin', 'admin'])
+            ->whereIn('role', ['superadmin', 'admin', 'distributor'])
             ->exists();
 
         if (!$userExists) {
@@ -49,7 +49,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Login admin/staff
+     * Login admin / distributor
      * POST /api/auth/login
      */
     public function loginAdmin(Request $request)
@@ -62,9 +62,9 @@ class AuthController extends Controller
 
         $user = User::where('username', strtolower($request->username))
             ->where('company_id', $request->companyId)
-            ->whereIn('role', ['superadmin', 'admin'])
+            ->whereIn('role', ['superadmin', 'admin', 'distributor'])
             ->where('is_active', true)
-            ->with('company:id,name')
+            ->with(['company:id,name', 'distributor:id,name,module_permissions'])
             ->first();
 
         if (!$user) {
@@ -75,14 +75,19 @@ class AuthController extends Controller
             return $this->errorResponse('Invalid username or password', 404);
         }
 
-        $token = $this->generateJwt([
-            'id' => $user->id,
-            'username' => $user->username,
-            'companyId' => $user->company_id,
-            'userType' => $user->role,
-        ]);
+        $payload = [
+            'id'            => $user->id,
+            'username'      => $user->username,
+            'companyId'     => $user->company_id,
+            'userType'      => $user->role,
+            'distributorId' => $user->distributor_id,
+            'modules'       => $user->getAllowedModules(),
+        ];
+
+        $token = $this->generateJwt($payload);
 
         $user->makeHidden(['password']);
+        $user->append('allowed_modules');
 
         return $this->authResponse($token, $user);
     }

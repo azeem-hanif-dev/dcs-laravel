@@ -91,6 +91,52 @@
                     <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Contact Number</label><input type="text" x-model="form.contactNumber" placeholder="Phone" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none"></div>
                 </div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1.5">Address</label><textarea x-model="form.address" rows="2" placeholder="Address..." class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none resize-none"></textarea></div>
+                {{-- Module Permissions (Admin Only - shown when user is admin) --}}
+                <div x-data="{ userRole: '' }" x-init="try { userRole = JSON.parse(localStorage.getItem('user') || '{}').role || '' } catch(e) {}">
+                    <div x-show="!isEditing || userRole === 'admin' || userRole === 'superadmin'">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Module Access</label>
+                        <p class="text-xs text-gray-500 mb-3">Control which modules this distributor can access after login.</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <template x-for="m in [
+                                {key:'sales',label:'Sales',desc:'Shops, Orders, Invoices'},
+                                {key:'inventory',label:'Inventory',desc:'Products, Warehouses, Stock'},
+                                {key:'procurement',label:'Procurement',desc:'Suppliers, Purchase Orders'},
+                                {key:'customers',label:'Customers',desc:'Customer Management'},
+                                {key:'reports',label:'Reports',desc:'Business, Quality Reports'}
+                            ]" :key="m.key">
+                                <label class="flex items-start gap-2 p-3 border border-gray-200 rounded-xl hover:border-primary cursor-pointer transition-colors" :class="form.modulePermissions[m.key] ? 'bg-primary/5 border-primary' : ''">
+                                    <input type="checkbox" :checked="form.modulePermissions[m.key]" @change="form.modulePermissions[m.key] = $event.target.checked"
+                                        class="mt-0.5 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30 cursor-pointer" />
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-800" x-text="m.label"></span>
+                                        <span class="text-[10px] text-gray-400 block" x-text="m.desc"></span>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                    {{-- Login Credentials (only when creating new + admin) --}}
+                    <div x-show="!isEditing" class="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <label class="flex items-center gap-2 mb-3 cursor-pointer">
+                            <input type="checkbox" x-model="form.createLogin" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30" />
+                            <span class="text-sm font-medium text-gray-700">Create login account for this distributor</span>
+                        </label>
+                        <div x-show="form.createLogin" x-transition class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Username</label>
+                                <input type="text" x-model="form.loginUsername" placeholder="distributor_username" 
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none" />
+                                <p x-show="errors.loginUsername" class="text-red-500 text-xs mt-1" x-text="errors.loginUsername"></p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Password</label>
+                                <input type="password" x-model="form.loginPassword" placeholder="Min. 6 characters" 
+                                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none" />
+                                <p x-show="errors.loginPassword" class="text-red-500 text-xs mt-1" x-text="errors.loginPassword"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1.5">Logo</label>
                     <div class="flex items-center gap-4">
@@ -134,16 +180,16 @@
 @push('scripts')
 <script>
 function distributorData(){return{
-    items:[],suppliers:[],search:'',filterSupplier:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,logoPreview:null,logoFile:null,form:{id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:''},errors:{},deleteId:null,
+    items:[],suppliers:[],search:'',filterSupplier:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,logoPreview:null,logoFile:null,form:{id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:'',modulePermissions:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''},errors:{},deleteId:null,
     get visiblePages(){let p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(let i=s;i<=e;i++)p.push(i);return p},
     async init(){await this.fetchSuppliers();this.fetchItems()},
     async fetchSuppliers(){try{let d=await Alpine.store('api').get('/api/v1/supplier',{per_page:500});if(d&&d.status)this.suppliers=d.data?.data||d.data||[]}catch(e){console.error('Failed to load suppliers:',e)}},
     async fetchItems(){this.loading=true;try{let params={page:this.currentPage,per_page:this.perPage,search:this.search||undefined};if(this.filterSupplier)params.supplier_id=this.filterSupplier;let d=await Alpine.store('api').get('/api/v1/distributor',params);if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load distributors')}finally{this.loading=false}},
-    openAddModal(){this.isEditing=false;this.form={id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:''};this.errors={};this.logoPreview=null;this.logoFile=null;if(this.suppliers.length===0)this.fetchSuppliers();this.modalOpen=true},
-    openEditModal(item){this.isEditing=true;this.form={id:item.id,name:item.name||'',email:item.email||'',contactPerson:item.contactPerson||item.contact_person||'',contactNumber:item.contactNumber||item.contact_number||'',address:item.address||'',supplierId:item.supplier_id||''};this.logoPreview=item.logo?'/storage/'+item.logo:null;this.logoFile=null;this.errors={};this.modalOpen=true},
+    openAddModal(){this.isEditing=false;this.form={id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:'',modulePermissions:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''};this.errors={};this.logoPreview=null;this.logoFile=null;if(this.suppliers.length===0)this.fetchSuppliers();this.modalOpen=true},
+    openEditModal(item){this.isEditing=true;this.form={id:item.id,name:item.name||'',email:item.email||'',contactPerson:item.contactPerson||item.contact_person||'',contactNumber:item.contactNumber||item.contact_number||'',address:item.address||'',supplierId:item.supplier_id||'',modulePermissions:(item.module_permissions&&typeof item.module_permissions==='object')?{sales:!!item.module_permissions.sales,inventory:!!item.module_permissions.inventory,procurement:!!item.module_permissions.procurement,customers:!!item.module_permissions.customers,reports:!!item.module_permissions.reports}:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''};this.logoPreview=item.logo?'/storage/'+item.logo:null;this.logoFile=null;this.errors={};this.modalOpen=true},
     closeModal(){this.modalOpen=false;this.logoFile=null;this.logoPreview=null;this.errors={}},
     handleLogoUpload(e){let f=e.target.files[0];if(!f)return;if(f.size>2*1024*1024){Alpine.store('toast').error('Image must be under 2MB');return};this.logoFile=f;let r=new FileReader();r.onload=ev=>{this.logoPreview=ev.target.result};r.readAsDataURL(f)},
-    async saveItem(){this.errors={};if(!this.form.name){this.errors.name='Name is required';return};if(!this.form.email){this.errors.email='Email is required';return};if(!this.form.supplierId){this.errors.supplierId='Supplier is required';return};this.saving=true;try{let fd=new FormData();fd.append('name',this.form.name);fd.append('email',this.form.email);fd.append('supplierId',this.form.supplierId);if(this.form.contactPerson)fd.append('contactPerson',this.form.contactPerson);if(this.form.contactNumber)fd.append('contactNumber',this.form.contactNumber);if(this.form.address)fd.append('address',this.form.address);if(this.logoFile)fd.append('logo',this.logoFile);let url=this.isEditing?'/api/v1/distributor/'+this.form.id:'/api/v1/distributor';if(this.isEditing){fd.append('_method','PUT');await Alpine.store('api').post(url,fd,true)}else{await Alpine.store('api').post(url,fd,true)};this.closeModal();Alpine.store('toast').success(this.isEditing?'Distributor updated':'Distributor created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
+    async saveItem(){this.errors={};if(!this.form.name){this.errors.name='Name is required';return};if(!this.form.email){this.errors.email='Email is required';return};if(!this.form.supplierId){this.errors.supplierId='Supplier is required';return};if(this.form.createLogin){if(!this.form.loginUsername){this.errors.loginUsername='Username is required for login';return};if(!this.form.loginPassword||this.form.loginPassword.length<6){this.errors.loginPassword='Password must be at least 6 characters';return}};this.saving=true;try{let fd=new FormData();fd.append('name',this.form.name);fd.append('email',this.form.email);fd.append('supplierId',this.form.supplierId);if(this.form.contactPerson)fd.append('contactPerson',this.form.contactPerson);if(this.form.contactNumber)fd.append('contactNumber',this.form.contactNumber);if(this.form.address)fd.append('address',this.form.address);if(this.logoFile)fd.append('logo',this.logoFile);if(!this.isEditing){fd.append('modulePermissions',JSON.stringify(this.form.modulePermissions));if(this.form.createLogin){fd.append('createLogin','1');fd.append('loginUsername',this.form.loginUsername);fd.append('loginPassword',this.form.loginPassword)}}else{fd.append('modulePermissions',JSON.stringify(this.form.modulePermissions))};let url=this.isEditing?'/api/v1/distributor/'+this.form.id:'/api/v1/distributor';if(this.isEditing){fd.append('_method','PUT');await Alpine.store('api').post(url,fd,true)}else{await Alpine.store('api').post(url,fd,true)};this.closeModal();Alpine.store('toast').success(this.isEditing?'Distributor updated':'Distributor created');this.fetchItems()}catch(e){if(e.errors)this.errors=e.errors;else Alpine.store('toast').error(e.message||'Save failed')}this.saving=false},
     confirmDelete(item){this.deleteId=item.id;this.deleteModalOpen=true},
     async deleteItem(){this.saving=true;try{await Alpine.store('api').del('/api/v1/distributor/'+this.deleteId);this.deleteModalOpen=false;Alpine.store('toast').success('Distributor deleted');this.fetchItems()}catch(e){Alpine.store('toast').error(e.message||'Delete failed')}this.saving=false},
     changePage(p){if(p>=1&&p<=this.totalPages){this.currentPage=p;this.fetchItems()}},

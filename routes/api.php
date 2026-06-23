@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Common\MeController;
 use App\Http\Controllers\Api\Common\AdminController;
 use App\Http\Controllers\Api\Common\CompanyController;
 use App\Http\Controllers\Api\Common\ContactController;
@@ -80,6 +81,10 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
     Route::put('admin/update-role/{id}', [AdminController::class, 'updateRole']);
     Route::delete('admin/delete/{id}', [AdminController::class, 'destroy']);
     Route::put('admin/change-password', [AdminController::class, 'changePassword']);
+
+    // Me / Current User
+    Route::get('me', [MeController::class, 'show']);
+    Route::get('me/permissions', [MeController::class, 'permissions']);
 
     // Company
     Route::apiResource('company', CompanyController::class);
@@ -191,41 +196,50 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
 
     // ===== NEW: Distributor Management Modules =====
 
-    // Warehouses
-    Route::apiResource('warehouse', WarehouseController::class);
+    // Sales module
+    Route::middleware('check.module:sales')->group(function () {
+        // Sales Orders
+        Route::put('sales-order/{id}/status', [SalesOrderController::class, 'updateStatus']);
+        Route::apiResource('sales-order', SalesOrderController::class);
 
-    // Salesmen
-    Route::apiResource('salesman', SalesmanController::class);
+        // Invoices
+        Route::put('invoice/{id}/status', [InvoiceController::class, 'updateStatus']);
+        Route::apiResource('invoice', InvoiceController::class);
 
-    // Shops
-    Route::apiResource('shop', ShopController::class);
+        // Payments
+        Route::apiResource('payment', PaymentController::class);
 
-    // Sales Orders
-    Route::put('sales-order/{id}/status', [SalesOrderController::class, 'updateStatus']);
-    Route::apiResource('sales-order', SalesOrderController::class);
+        // Deliveries
+        Route::put('delivery/{id}/status', [DeliveryController::class, 'updateStatus']);
+        Route::apiResource('delivery', DeliveryController::class);
 
-    // Invoices
-    Route::put('invoice/{id}/status', [InvoiceController::class, 'updateStatus']);
-    Route::apiResource('invoice', InvoiceController::class);
+        // Sales Returns
+        Route::put('sales-return/{id}/status', [SalesReturnController::class, 'updateStatus']);
+        Route::apiResource('sales-return', SalesReturnController::class);
 
-    // Payments
-    Route::apiResource('payment', PaymentController::class);
+        // Shops
+        Route::apiResource('shop', ShopController::class);
 
-    // Deliveries
-    Route::put('delivery/{id}/status', [DeliveryController::class, 'updateStatus']);
-    Route::apiResource('delivery', DeliveryController::class);
+        // Salesmen
+        Route::apiResource('salesman', SalesmanController::class);
+    });
 
-    // Sales Returns
-    Route::put('sales-return/{id}/status', [SalesReturnController::class, 'updateStatus']);
-    Route::apiResource('sales-return', SalesReturnController::class);
+    // Inventory module
+    Route::middleware('check.module:inventory')->group(function () {
+        // Warehouses
+        Route::apiResource('warehouse', WarehouseController::class);
 
-    // Purchase Returns
-    Route::put('purchase-return/{id}/status', [PurchaseReturnController::class, 'updateStatus']);
-    Route::apiResource('purchase-return', PurchaseReturnController::class);
+        // Stock
+        Route::get('stock/overview', [StockController::class, 'overview']);
+        Route::post('stock/adjust', [StockController::class, 'adjust']);
+    });
 
-    // Stock
-    Route::get('stock/overview', [StockController::class, 'overview']);
-    Route::post('stock/adjust', [StockController::class, 'adjust']);
+    // Procurement module
+    Route::middleware('check.module:procurement')->group(function () {
+        // Purchase Returns
+        Route::put('purchase-return/{id}/status', [PurchaseReturnController::class, 'updateStatus']);
+        Route::apiResource('purchase-return', PurchaseReturnController::class);
+    });
 });
 
 // *************************************** PUBLIC ROUTES (no auth required) ***************************************
