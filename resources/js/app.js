@@ -269,6 +269,11 @@ Alpine.store('pager', {
                 }
             },
 
+            // Alias for pagination-footer compatibility
+            changePage(page) {
+                return this.goToPage(page);
+            },
+
             // Handle per-page dropdown changes
             changePerPage(n) {
                 n = parseInt(n);

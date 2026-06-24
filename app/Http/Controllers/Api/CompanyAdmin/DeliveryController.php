@@ -75,6 +75,17 @@ class DeliveryController extends Controller
                 if ($stock) {
                     $stock->decrement('total_quantity', $item->quantity);
                     $stock->decrement('reserved_quantity', $item->quantity);
+                    $stock->refresh();
+
+                    $stock->logMovement(
+                        type:         'sales_shipped',
+                        change:       -$item->quantity,
+                        userId:       $request->auth_user->id,
+                        refType:      'SalesOrder',
+                        refId:        $order->id,
+                        refNumber:    $order->so_number,
+                        notes:        "Delivery #{$delivery->id} shipped — {$item->quantity} units out"
+                    );
                 }
             }
         }

@@ -57,7 +57,19 @@ class SalesReturnController extends Controller
 
         foreach ($items as $item) {
             $stock = Stock::where('product_id', $item['product_id'])->where('company_id', $request->company_id)->first();
-            if ($stock) $stock->increment('total_quantity', $item['quantity']);
+            if ($stock) {
+                $stock->increment('total_quantity', $item['quantity']);
+                $stock->refresh();
+                $stock->logMovement(
+                    type:         'sales_returned',
+                    change:       $item['quantity'],
+                    userId:       $request->auth_user->id,
+                    refType:      'SalesReturn',
+                    refId:        $return->id,
+                    refNumber:    $return->return_number,
+                    notes:        "Return #{$return->return_number} — {$item['quantity']} units back"
+                );
+            }
             $material = \App\Models\Material\Material::find($item['product_id']);
             if ($material) $material->increment('total_quantity', $item['quantity']);
         }

@@ -4,22 +4,26 @@ namespace App\Http\Controllers\Api\CompanyAdmin\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class CustomerController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
-        $query = Customer::where('company_id', $request->company_id)->latest();
+        $query = Customer::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Customers retrieved');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeAdminOrDistributor($request);
         $data = $request->validate([
             'name' => 'required|string',
             'email' => 'required|email',
@@ -45,13 +49,17 @@ class CustomerController extends Controller
 
     public function show(Request $request, $id)
     {
-        $customer = Customer::where('company_id', $request->company_id)->findOrFail($id);
-        return $this->successResponse($customer);
+        $query = Customer::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $customer = Customer::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Customer::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $customer = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string',
             'email' => 'sometimes|email',
@@ -72,8 +80,18 @@ class CustomerController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $customer = Customer::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Customer::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $customer = $query->findOrFail($id);
         $customer->update(['is_delete' => true]);
         return $this->successResponse(null, 'Customer deleted successfully');
+    }
+
+    private function authorizeAdminOrDistributor(Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || !in_array($user->role, ['superadmin', 'admin'])) {
+            abort(403, 'Only superadmin/admin can create customers.');
+        }
     }
 }

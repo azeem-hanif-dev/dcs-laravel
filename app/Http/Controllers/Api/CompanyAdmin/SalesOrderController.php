@@ -49,7 +49,7 @@ class SalesOrderController extends Controller
         $data['so_number'] = SalesOrder::generateSoNumber();
         $data['company_id'] = $request->company_id;
         $data['user_id'] = $request->auth_user->id;
-        $data['status'] = $request->status ?? 'Draft';
+        $data['status'] = $request->status ?? 'Processing';
 
         $items = $data['items'];
         unset($data['items']);
@@ -59,6 +59,45 @@ class SalesOrderController extends Controller
         foreach ($items as $item) {
             $item['total'] = ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0);
             $order->items()->create($item);
+        }
+
+        // Only reserve stock if status is Confirmed or beyond (not Draft/Processing)
+        if (in_array($order->status, ['Confirmed', 'Ready', 'Delivered'])) {
+            if ($order->warehouse_id) {
+                foreach ($order->items as $item) {
+                    $stock = Stock::firstOrCreate(
+                        ['product_id' => $item->product_id, 'warehouse_id' => $order->warehouse_id, 'company_id' => $order->company_id],
+                        ['total_quantity' => 0, 'reserved_quantity' => 0]
+                    );
+                    $stock->increment('reserved_quantity', $item->quantity);
+                    $stock->refresh();
+                    $stock->logMovement(
+                        type: 'reserved',
+                        change: $item->quantity,
+                        userId: $request->auth_user->id,
+                        refType: 'SalesOrder',
+                        refId: $order->id,
+                        refNumber: $order->so_number,
+                        notes: "SO #{$order->so_number} created as Confirmed — reserved {$item->quantity} units"
+                    );
+                }
+            }
+
+            if (!Invoice::where('sales_order_id', $order->id)->exists()) {
+                Invoice::create([
+                    'invoice_number' => Invoice::generateInvoiceNumber(),
+                    'sales_order_id' => $order->id,
+                    'shop_id' => $order->shop_id,
+                    'invoice_type' => 'sales',
+                    'invoice_date' => now()->toDateString(),
+                    'due_date' => now()->addDays(30)->toDateString(),
+                    'total_amount' => $order->grand_total,
+                    'paid_amount' => 0,
+                    'status' => 'Unpaid',
+                    'company_id' => $order->company_id,
+                    'user_id' => $request->auth_user->id,
+                ]);
+            }
         }
 
         return $this->successResponse($order->load('items.product', 'shop'), 'Sales order created', 201);
@@ -118,6 +157,18 @@ class SalesOrderController extends Controller
                     ['total_quantity' => 0, 'reserved_quantity' => 0]
                 );
                 $stock->increment('reserved_quantity', $item->quantity);
+                $stock->refresh();
+
+                // Log reserve movement
+                $stock->logMovement(
+                    type:         'reserved',
+                    change:       $item->quantity,
+                    userId:       $request->auth_user->id,
+                    refType:      'SalesOrder',
+                    refId:        $order->id,
+                    refNumber:    $order->so_number,
+                    notes:        "SO #{$order->so_number} confirmed — reserved {$item->quantity} units"
+                );
             }
 
             if (!Invoice::where('sales_order_id', $order->id)->exists()) {
@@ -144,6 +195,17 @@ class SalesOrderController extends Controller
                     ->where('company_id', $order->company_id)->first();
                 if ($stock) {
                     $stock->decrement('reserved_quantity', $item->quantity);
+                    $stock->refresh();
+
+                    $stock->logMovement(
+                        type:         'released',
+                        change:       -$item->quantity,
+                        userId:       $request->auth_user->id,
+                        refType:      'SalesOrder',
+                        refId:        $order->id,
+                        refNumber:    $order->so_number,
+                        notes:        "SO #{$order->so_number} cancelled — released {$item->quantity} reserved units"
+                    );
                 }
             }
         }

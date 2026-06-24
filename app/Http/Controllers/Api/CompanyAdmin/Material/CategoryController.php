@@ -15,7 +15,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $query = Category::where('company_id', $request->company_id)->with('subcategories');
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyCategoryVisibility($query, $request);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Categories retrieved');
     }
@@ -32,14 +32,14 @@ class CategoryController extends Controller
     public function show(Request $request, $id)
     {
         $query = Category::where('company_id', $request->company_id)->with('subcategories');
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyCategoryVisibility($query, $request);
         return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
         $query = Category::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyCategoryVisibility($query, $request);
         $category = $query->findOrFail($id);
 
         $data = $request->validate(['name' => 'required|string|max:255']);
@@ -50,9 +50,34 @@ class CategoryController extends Controller
     public function destroy(Request $request, $id)
     {
         $query = Category::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyCategoryVisibility($query, $request);
         $category = $query->findOrFail($id);
         $category->delete();
         return $this->successResponse(null, 'Category deleted successfully');
+    }
+
+    /**
+     * Distributor sees: categories they created + categories used by their products.
+     */
+    private function applyCategoryVisibility($query, Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || in_array($user->role, ['superadmin', 'admin'])) return $query;
+        if ($user->role !== 'distributor') return $query->where('user_id', $user->id);
+
+        // Get product IDs visible to this distributor
+        $productQuery = \App\Models\Material\Material::where('company_id', $request->company_id);
+        $distributor = \App\Models\Material\Distributor::find($user->distributor_id);
+        $supplierId = $distributor?->supplier_id;
+
+        $productIds = $productQuery->where(function ($q) use ($user, $supplierId) {
+            $q->where('user_id', $user->id);
+            if ($supplierId) $q->orWhere('supplier_id', $supplierId);
+        })->pluck('category_id')->unique()->filter()->toArray();
+
+        return $query->where(function ($q) use ($user, $productIds) {
+            $q->where('user_id', $user->id);
+            if (!empty($productIds)) $q->orWhereIn('id', $productIds);
+        });
     }
 }

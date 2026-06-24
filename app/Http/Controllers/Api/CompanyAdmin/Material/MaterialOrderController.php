@@ -9,6 +9,7 @@ use App\Models\Material\MaterialOrder;
 use App\Models\Material\MaterialOrderItem;
 use App\Models\Invoice;
 use App\Models\Stock;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 
 class MaterialOrderController extends Controller
@@ -183,6 +184,18 @@ class MaterialOrderController extends Controller
                         ['total_quantity' => 0, 'reserved_quantity' => 0]
                     );
                     $stock->increment('total_quantity', $item->quantity);
+                    $stock->refresh();
+
+                    // Log stock movement
+                    $stock->logMovement(
+                        type:         'purchase_received',
+                        change:       $item->quantity,
+                        userId:       $request->auth_user->id,
+                        refType:      'PurchaseOrder',
+                        refId:        $order->id,
+                        refNumber:    $order->po_number,
+                        notes:        "PO #{$order->po_number} delivered — received {$item->quantity} units"
+                    );
                 }
             }
 
@@ -222,6 +235,18 @@ class MaterialOrderController extends Controller
                         if ($stock->total_quantity < 0) {
                             $stock->update(['total_quantity' => 0]);
                         }
+                        $stock->refresh();
+
+                        // Log reversal
+                        $stock->logMovement(
+                            type:         'manual_removal',
+                            change:       -$item->quantity,
+                            userId:       $request->auth_user->id,
+                            refType:      'PurchaseOrder',
+                            refId:        $order->id,
+                            refNumber:    $order->po_number,
+                            notes:        "PO #{$order->po_number} cancelled — reversed {$item->quantity} units"
+                        );
                     }
                 }
             }

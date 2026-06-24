@@ -15,13 +15,14 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         $query = Supplier::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applySupplierVisibility($query, $request);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Suppliers retrieved');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeAdmin($request);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email',
@@ -45,14 +46,15 @@ class SupplierController extends Controller
     public function show(Request $request, $id)
     {
         $query = Supplier::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applySupplierVisibility($query, $request);
         return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
+        $this->authorizeAdmin($request);
         $query = Supplier::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applySupplierVisibility($query, $request);
         $supplier = $query->findOrFail($id);
 
         $data = $request->validate([
@@ -72,10 +74,37 @@ class SupplierController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        $this->authorizeAdmin($request);
         $query = Supplier::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applySupplierVisibility($query, $request);
         $supplier = $query->findOrFail($id);
         $supplier->delete();
         return $this->successResponse(null, 'Supplier deleted successfully');
+    }
+
+    /**
+     * Distributor sees their linked supplier (via distributor.supplier_id) or suppliers they created.
+     */
+    private function applySupplierVisibility($query, Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || in_array($user->role, ['superadmin', 'admin'])) return $query;
+        if ($user->role !== 'distributor') return $query->where('user_id', $user->id);
+
+        $distributor = \App\Models\Material\Distributor::find($user->distributor_id);
+        $supplierId = $distributor?->supplier_id;
+
+        return $query->where(function ($q) use ($user, $supplierId) {
+            $q->where('user_id', $user->id);
+            if ($supplierId) $q->orWhere('id', $supplierId);
+        });
+    }
+
+    private function authorizeAdmin(Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || !in_array($user->role, ['superadmin', 'admin'])) {
+            abort(403, 'Only superadmin/admin can manage suppliers.');
+        }
     }
 }

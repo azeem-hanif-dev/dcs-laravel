@@ -16,7 +16,7 @@ class MaterialController extends Controller
     {
         $query = Material::where('company_id', $request->company_id)
             ->with(['category', 'subcategory', 'supplier']);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyProductVisibility($query, $request);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Materials retrieved');
     }
@@ -51,14 +51,14 @@ class MaterialController extends Controller
     {
         $query = Material::where('company_id', $request->company_id)
             ->with(['category', 'subcategory', 'supplier']);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyProductVisibility($query, $request);
         return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
         $query = Material::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyProductVisibility($query, $request);
         $material = $query->findOrFail($id);
 
         $data = $request->validate([
@@ -86,7 +86,7 @@ class MaterialController extends Controller
     public function destroy(Request $request, $id)
     {
         $query = Material::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyProductVisibility($query, $request);
         $material = $query->findOrFail($id);
         $material->delete();
         return $this->successResponse(null, 'Material deleted successfully');
@@ -103,5 +103,24 @@ class MaterialController extends Controller
         $material = Material::where('company_id', $request->company_id)->findOrFail($id);
         $remaining = $material->total_quantity - $material->assigned_quantity;
         return $this->successResponse(['remaining' => $remaining]);
+    }
+
+    /**
+     * Products visible to distributor: created by them OR from their linked supplier.
+     */
+    private function applyProductVisibility($query, Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || in_array($user->role, ['superadmin', 'admin'])) return $query;
+        if ($user->role !== 'distributor') return $query->where('user_id', $user->id);
+
+        // Get distributor's supplier_id
+        $distributor = \App\Models\Material\Distributor::find($user->distributor_id);
+        $supplierId = $distributor?->supplier_id;
+
+        return $query->where(function ($q) use ($user, $supplierId) {
+            $q->where('user_id', $user->id);
+            if ($supplierId) $q->orWhere('supplier_id', $supplierId);
+        });
     }
 }

@@ -4,7 +4,7 @@
 @section('title', 'Customers - Distributor Portal')
 
 @section('page-content')
-<div x-data="customerData()" x-init="fetchItems()" class="max-w-7xl mx-auto px-2 sm:px-4">
+<div x-data="customerData()" x-init="initPage()" class="max-w-7xl mx-auto px-2 sm:px-4">
 
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
@@ -12,7 +12,7 @@
             <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Customers</h1>
             <p class="text-sm text-gray-500 mt-0.5">Manage customer accounts</p>
         </div>
-        <button @click="openAddModal()"
+        <button @click="openAddModal()" x-show="isAdmin"
             class="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-md transition-all flex items-center gap-2 whitespace-nowrap">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add Customer
@@ -185,8 +185,9 @@
 @push('scripts')
 <script>
 function customerData(){return{
-    items:[],search:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,form:{name:'',email:'',phone:'',countryCode:'',country:'',city:'',address:'',contactPerson1:'',contactPerson2:'',password:''},errors:{},
+    items:[],search:'',isAdmin:false,currentPage:1,perPage:10,total:0,totalPages:1,loading:false,saving:false,modalOpen:false,deleteModalOpen:false,editId:null,deleteTarget:null,form:{name:'',email:'',phone:'',countryCode:'',country:'',city:'',address:'',contactPerson1:'',contactPerson2:'',password:''},errors:{},
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
+    initPage(){try{var u=JSON.parse(localStorage.getItem('user')||'{}');this.isAdmin=!u.role||u.role==='superadmin'||u.role==='admin'}catch(e){}this.fetchItems()},
     async fetchItems(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/customer',{page:this.currentPage,per_page:this.perPage,search:this.search||undefined});if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load customers')}finally{this.loading=false}},
     openAddModal(){this.editId=null;this.errors={};this.form={name:'',email:'',phone:'',countryCode:'',country:'',city:'',address:'',contactPerson1:'',contactPerson2:'',password:''};this.modalOpen=true},
     openEditModal(c){this.editId=c.id;this.errors={};this.form={name:c.name||'',email:c.email||'',phone:c.phone||'',countryCode:c.country_code||c.countryCode||'',country:c.country||'',city:c.city||'',address:c.address||'',contactPerson1:c.contact_person1||c.contactPerson1||'',contactPerson2:c.contact_person2||c.contactPerson2||'',password:''};this.modalOpen=true},

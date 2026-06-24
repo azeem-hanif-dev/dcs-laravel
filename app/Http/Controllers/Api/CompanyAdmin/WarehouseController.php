@@ -19,6 +19,7 @@ class WarehouseController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeAdmin($request);
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'nullable|string',
@@ -39,6 +40,7 @@ class WarehouseController extends Controller
 
     public function update(Request $request, $id)
     {
+        $this->authorizeAdmin($request);
         $warehouse = Warehouse::where('company_id', $request->company_id)->findOrFail($id);
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -53,8 +55,17 @@ class WarehouseController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        $this->authorizeAdmin($request);
         $warehouse = Warehouse::where('company_id', $request->company_id)->findOrFail($id);
         $warehouse->delete();
         return $this->successResponse(null, 'Warehouse deleted');
+    }
+
+    private function authorizeAdmin(Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || !in_array($user->role, ['superadmin', 'admin'])) {
+            abort(403, 'Only superadmin/admin can manage warehouses.');
+        }
     }
 }

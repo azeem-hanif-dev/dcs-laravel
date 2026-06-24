@@ -231,6 +231,10 @@ Route::prefix('v1')->middleware(['verify.jwt', 'company.filter'])->group(functio
 
         // Stock
         Route::get('stock/overview', [StockController::class, 'overview']);
+        Route::get('stock/summary', [StockController::class, 'summary']);
+        Route::get('stock/movements', [StockController::class, 'movements']);
+        Route::get('stock/movement-types', [StockController::class, 'movementTypes']);
+        Route::get('stock/product/{productId}', [StockController::class, 'byProduct']);
         Route::post('stock/adjust', [StockController::class, 'adjust']);
     });
 

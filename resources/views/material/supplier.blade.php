@@ -2,10 +2,10 @@
 @extends('layouts.admin')
 @section('title', 'Suppliers - Distributor Portal')
 @section('page-content')
-<div x-data="supplierData()" x-init="fetchItems()" class="max-w-7xl mx-auto px-2 sm:px-4">
+<div x-data="supplierData()" x-init="initPage()" class="max-w-7xl mx-auto px-2 sm:px-4">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <div><h1 class="text-xl sm:text-2xl font-bold text-gray-800">Suppliers</h1><p class="text-sm text-gray-500 mt-0.5">Manage your suppliers</p></div>
-        <button @click="openAddModal()" class="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-md transition-all flex items-center gap-2 whitespace-nowrap">
+        <button @click="openAddModal()" x-show="isAdmin" class="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-md transition-all flex items-center gap-2 whitespace-nowrap">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Supplier
         </button>
     </div>
@@ -45,7 +45,7 @@
                             <td class="px-3 py-3 text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell" data-label="Email" x-text="item.email"></td>
                             <td class="px-3 py-3 text-sm text-gray-600 whitespace-nowrap hidden md:table-cell" data-label="Phone" x-text="item.contact_number||item.phone||''"></td>
                             <td class="px-3 py-3 text-center whitespace-nowrap" data-label="Actions">
-                                <div class="flex justify-center gap-1">
+                                <div class="flex justify-center gap-1" x-show="isAdmin">
                                     <button @click="openEditModal(item)" class="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50" title="Edit"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
                                     <button @click="confirmDelete(item)" class="p-1.5 rounded-lg text-red-500 hover:bg-red-50" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                 </div>
@@ -102,8 +102,9 @@
 @push('scripts')
 <script>
 function supplierData(){return{
-    items:[],search:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,saving:false,modalOpen:false,deleteModalOpen:false,isEditing:false,form:{id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:''},errors:{},deleteId:null,
+    items:[],search:'',isAdmin:false,currentPage:1,perPage:10,total:0,totalPages:1,loading:false,saving:false,modalOpen:false,deleteModalOpen:false,isEditing:false,form:{id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:''},errors:{},deleteId:null,
     get visiblePages(){var p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(var i=s;i<=e;i++)p.push(i);return p},
+    initPage(){try{var u=JSON.parse(localStorage.getItem('user')||'{}');this.isAdmin=!u.role||u.role==='superadmin'||u.role==='admin'}catch(e){}this.fetchItems()},
     searchChanged(){this.currentPage=1;this.fetchItems()},
     async fetchItems(){this.loading=true;try{var d=await Alpine.store('api').get('/api/v1/supplier',{page:this.currentPage,per_page:this.perPage,search:this.search||''});if(d&&d.status){var arr=d.data;this.items=Array.isArray(arr)?arr:(arr&&arr.data?arr.data:[]);this.total=arr&&arr.total?arr.total:this.items.length;this.totalPages=arr&&arr.last_page?arr.last_page:Math.max(1,Math.ceil(this.total/this.perPage))}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load suppliers')}finally{this.loading=false}},
     openAddModal(){this.isEditing=false;this.form={id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:''};this.errors={};this.modalOpen=true},

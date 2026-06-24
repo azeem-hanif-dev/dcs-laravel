@@ -33,7 +33,7 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Warehouse</label>
-                <select x-model="form.warehouse_id" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
+                <select x-model="form.warehouse_id" @change="onWarehouseChange()" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
                     <option value="">Select warehouse</option>
                     <template x-for="w in warehouses" :key="w.id">
                         <option :value="w.id" x-text="w.name"></option>
@@ -56,7 +56,7 @@
                 <select x-model="newItem.product_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none">
                     <option value="">Select product</option>
                     <template x-for="p in products" :key="p.id">
-                        <option :value="p.id" x-text="p.material_name + ' (Stock: '+(p.total_quantity - p.assigned_quantity)+')'"></option>
+                        <option :value="p.id" x-text="p.material_name + ' (Avail: '+getAvailableQty(p.id)+')'"></option>
                     </template>
                 </select>
             </div>
@@ -135,10 +135,10 @@
     <div class="flex justify-end gap-3" x-show="items.length > 0">
         <button @click="saveOrder('Draft')" :disabled="saving"
             class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50">Save as Draft</button>
-        <button @click="saveOrder('Confirmed')" :disabled="saving"
+        <button @click="saveOrder('Processing')" :disabled="saving"
             class="px-5 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2">
             <svg x-show="saving" class="spinner w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-            <span x-text="saving ? 'Saving...' : 'Confirm Order'"></span>
+            <span x-text="saving ? 'Saving...' : 'Create Order'"></span>
         </button>
     </div>
 </div>
@@ -146,20 +146,31 @@
 @push('scripts')
 <script>
 function soCreateData(){return{
-    shops:[],salesmen:[],warehouses:[],products:[],items:[],saving:false,
+    shops:[],salesmen:[],warehouses:[],products:[],stockData:[],stockMap:{},items:[],saving:false,
     form:{shop_id:'',salesman_id:'',warehouse_id:'',order_date:new Date().toISOString().split('T')[0],notes:'',tax_percent:0,tax_amount:0,discount:0,grand_total:0},
     newItem:{product_id:'',quantity:1,unit_price:0},
     errors:{},
     get subtotal(){return this.items.reduce(function(s,i){return s+(parseFloat(i.total)||0)},0)},
-    async init(){await Promise.all([this.fetchShops(),this.fetchSalesmen(),this.fetchWarehouses(),this.fetchProducts()])},
+    async init(){await Promise.all([this.fetchShops(),this.fetchSalesmen(),this.fetchWarehouses(),this.fetchProducts(),this.fetchStock()])},
     async fetchShops(){try{var d=await Alpine.store('api').get('/api/v1/shop',{per_page:500});if(d&&d.status)this.shops=Array.isArray(d.data)?d.data:(d.data?.data||[])}catch(e){console.error(e)}},
     async fetchSalesmen(){try{var d=await Alpine.store('api').get('/api/v1/salesman',{per_page:500});if(d&&d.status)this.salesmen=Array.isArray(d.data)?d.data:(d.data?.data||[])}catch(e){console.error(e)}},
     async fetchWarehouses(){try{var d=await Alpine.store('api').get('/api/v1/warehouse',{per_page:500});if(d&&d.status)this.warehouses=Array.isArray(d.data)?d.data:(d.data?.data||[])}catch(e){console.error(e)}},
     async fetchProducts(){try{var d=await Alpine.store('api').get('/api/v1/material',{per_page:500,status:'Active'});if(d&&d.status)this.products=Array.isArray(d.data)?d.data:(d.data?.data||[])}catch(e){console.error(e)}},
+    async fetchStock(){try{var d=await Alpine.store('api').get('/api/v1/stock/overview',{per_page:500});if(d&&d.status){this.stockData=Array.isArray(d.data)?d.data:(d.data?.data||[]);this.recalcStockMap()}}catch(e){console.error(e)}},
+    recalcStockMap(wid){
+        this.stockMap={};var items=wid?this.stockData.filter(function(s){return s.warehouse_id==wid}):this.stockData;
+        var self=this;
+        items.forEach(function(s){
+            if(!self.stockMap[s.product_id])self.stockMap[s.product_id]=0;
+            self.stockMap[s.product_id]+=(s.total_quantity||0)-(s.reserved_quantity||0);
+        });
+    },
+    onWarehouseChange(){this.recalcStockMap(this.form.warehouse_id)},
+    getAvailableQty(productId){var a=this.stockMap[productId];return a!==undefined?a:0},
     onShopChange(){var shop=this.shops.find(function(s){return s.id==this.form.shop_id},this);if(shop&&shop.salesman_id)this.form.salesman_id=shop.salesman_id},
     addItem(){if(!this.newItem.product_id||!this.newItem.quantity)return;var p=this.products.find(function(p){return p.id==this.newItem.product_id},this);var qty=parseInt(this.newItem.quantity)||1;var price=parseFloat(this.newItem.unit_price)||parseFloat(p?p.price:0)||0;this.items.push({product_id:this.newItem.product_id,product_name:p?p.material_name:'Product',quantity:qty,unit_price:price,total:qty*price});this.newItem={product_id:'',quantity:1,unit_price:0};this.calcTotals()},
     calcTotals(){this.form.tax_amount=this.subtotal*(parseFloat(this.form.tax_percent)||0)/100;this.form.grand_total=Math.max(0,this.subtotal+this.form.tax_amount-(parseFloat(this.form.discount)||0))},
-    async saveOrder(status){this.errors={};if(!this.form.shop_id){this.errors.shop_id='Please select a shop';return}if(this.items.length===0){Alpine.store('toast').error('Add at least one product');return}this.calcTotals();this.saving=true;var payload={...this.form,status:status,items:this.items.map(function(i){return{product_id:i.product_id,quantity:i.quantity,unit_price:i.unit_price}})};try{var d=await Alpine.store('api').post('/api/v1/sales-order',payload);if(d.status){Alpine.store('toast').success(status==='Confirmed'?'Order confirmed!':'Draft saved!');window.location.href='/company_admin/sales_orders'}else{Alpine.store('toast').error(d.message||'Failed to save')}}catch(e){Alpine.store('toast').error(e.message||'Save failed')}finally{this.saving=false}}
+    async saveOrder(status){this.errors={};if(!this.form.shop_id){this.errors.shop_id='Please select a shop';return}if(this.items.length===0){Alpine.store('toast').error('Add at least one product');return}this.calcTotals();this.saving=true;var payload={...this.form,status:status,items:this.items.map(function(i){return{product_id:i.product_id,quantity:i.quantity,unit_price:i.unit_price}})};try{var d=await Alpine.store('api').post('/api/v1/sales-order',payload);            if(d.status){Alpine.store('toast').success(status==='Draft'?'Draft saved!':'Order created!');window.location.href='/company_admin/sales_orders'}else{Alpine.store('toast').error(d.message||'Failed to save')}}catch(e){Alpine.store('toast').error(e.message||'Save failed')}finally{this.saving=false}}
 }}
 </script>
 @endpush

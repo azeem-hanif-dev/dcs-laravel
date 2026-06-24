@@ -17,7 +17,14 @@ class DistributorController extends Controller
     {
         $query = Distributor::where('company_id', $request->company_id)
             ->with('supplier');
-        $query = $this->applyVisibility($query, $request);
+
+        // Distributor users see only their own distributor record
+        $user = $request->auth_user;
+        if ($user && $user->role === 'distributor' && $user->distributor_id) {
+            $query->where('id', $user->distributor_id);
+        } elseif ($user && !in_array($user->role, ['superadmin', 'admin'])) {
+            $query->where('user_id', $user->id);
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Distributors retrieved');
     }
@@ -97,7 +104,7 @@ class DistributorController extends Controller
     public function show(Request $request, $id)
     {
         $query = Distributor::where('company_id', $request->company_id)->with('supplier');
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyDistributorFilter($query, $request);
         return $this->successResponse($query->findOrFail($id));
     }
 
@@ -117,7 +124,7 @@ class DistributorController extends Controller
         }
 
         $query = Distributor::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyDistributorFilter($query, $request);
         $distributor = $query->findOrFail($id);
 
         $data = $request->validate([
@@ -147,11 +154,26 @@ class DistributorController extends Controller
     public function destroy(Request $request, $id)
     {
         $query = Distributor::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request);
+        $query = $this->applyDistributorFilter($query, $request);
         $distributor = $query->findOrFail($id);
 
         if ($distributor->logo) { Storage::disk('public')->delete($distributor->logo); }
         $distributor->delete();
         return $this->successResponse(null, 'Distributor deleted successfully');
+    }
+
+    /**
+     * Custom filter: Distributor users see their own record by id = user.distributor_id.
+     * Superadmin/admin see all. Others see records they created.
+     */
+    private function applyDistributorFilter($query, Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user) return $query;
+        if (in_array($user->role, ['superadmin', 'admin'])) return $query;
+        if ($user->role === 'distributor' && $user->distributor_id) {
+            return $query->where('id', $user->distributor_id);
+        }
+        return $query->where('user_id', $user->id);
     }
 }

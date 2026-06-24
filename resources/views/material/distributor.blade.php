@@ -5,9 +5,40 @@
 <div x-data="distributorData()" x-init="init()" class="max-w-7xl mx-auto px-2 sm:px-4">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
         <div><h1 class="text-xl sm:text-2xl font-bold text-gray-800">Distributors</h1><p class="text-sm text-gray-500 mt-0.5">Linked to suppliers</p></div>
-        <button @click="openAddModal()" class="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-md transition-all flex items-center gap-2 whitespace-nowrap">
+        <button @click="openAddModal()" x-show="!showMyProfile" class="bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-md transition-all flex items-center gap-2 whitespace-nowrap">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add Distributor
         </button>
+    </div>
+
+    {{-- My Distributor Profile (visible only to distributor users) --}}
+    <div x-show="showMyProfile" x-cloak class="bg-white rounded-xl shadow-sm border border-primary/20 p-5 mb-4 bg-gradient-to-r from-blue-50 to-white">
+        <div class="flex flex-col md:flex-row items-start gap-4">
+            <div class="flex-shrink-0">
+                <img :src="myDistributor?.logo ? '/storage/'+myDistributor.logo : '/common/distributor-logo.svg'" class="w-16 h-16 rounded-full object-cover border-2 border-primary/20" alt="Logo">
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <h2 class="text-lg font-bold text-gray-800" x-text="myDistributor?.name || 'Loading...'"></h2>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700 font-medium">My Profile</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                    <div><span class="text-gray-500">Email:</span> <span class="text-gray-700 font-medium" x-text="myDistributor?.email || '—'"></span></div>
+                    <div><span class="text-gray-500">Contact:</span> <span class="text-gray-700 font-medium" x-text="myDistributor?.contact_person || myDistributor?.contactPerson || '—'"></span></div>
+                    <div><span class="text-gray-500">Phone:</span> <span class="text-gray-700 font-medium" x-text="myDistributor?.contact_number || myDistributor?.contactNumber || '—'"></span></div>
+                    <div><span class="text-gray-500">Supplier:</span> <span class="text-gray-700 font-medium" x-text="myDistributor?.supplier?.name || '—'"></span></div>
+                </div>
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                    <template x-for="(enabled, module) in myDistributor?.module_permissions || {}" :key="module">
+                        <span x-show="enabled" class="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 capitalize" x-text="module"></span>
+                    </template>
+                </div>
+                <div class="mt-3">
+                    <button @click="myDistributor && openEditModal(myDistributor)" class="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:opacity-90 transition-colors flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg> Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-2.5 mb-3 border border-gray-100">
         <div class="flex flex-col sm:flex-row gap-3">
@@ -181,10 +212,12 @@
 <script>
 function distributorData(){return{
     items:[],suppliers:[],search:'',filterSupplier:'',currentPage:1,perPage:10,total:0,totalPages:1,loading:false,modalOpen:false,deleteModalOpen:false,isEditing:false,saving:false,logoPreview:null,logoFile:null,form:{id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:'',modulePermissions:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''},errors:{},deleteId:null,
+    currentUser:null,myDistributor:null,showMyProfile:false,
     get visiblePages(){let p=[],s=Math.max(1,this.currentPage-2),e=Math.min(this.totalPages,this.currentPage+2);for(let i=s;i<=e;i++)p.push(i);return p},
-    async init(){await this.fetchSuppliers();this.fetchItems()},
+    async init(){await this.fetchSuppliers();this.loadCurrentUser();this.fetchItems()},
+    loadCurrentUser(){try{var u=JSON.parse(localStorage.getItem('user')||'{}');this.currentUser=u;this.showMyProfile=u.role==='distributor'}catch(e){this.currentUser={}}},
     async fetchSuppliers(){try{let d=await Alpine.store('api').get('/api/v1/supplier',{per_page:500});if(d&&d.status)this.suppliers=d.data?.data||d.data||[]}catch(e){console.error('Failed to load suppliers:',e)}},
-    async fetchItems(){this.loading=true;try{let params={page:this.currentPage,per_page:this.perPage,search:this.search||undefined};if(this.filterSupplier)params.supplier_id=this.filterSupplier;let d=await Alpine.store('api').get('/api/v1/distributor',params);if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load distributors')}finally{this.loading=false}},
+    async fetchItems(){this.loading=true;try{let params={page:this.currentPage,per_page:this.perPage,search:this.search||undefined};if(this.filterSupplier)params.supplier_id=this.filterSupplier;let d=await Alpine.store('api').get('/api/v1/distributor',params);if(d&&d.status){this.items=d.data?.data||d.data||[];this.total=d.data?.total||d.total||this.items.length;this.totalPages=d.data?.last_page||d.last_page||Math.ceil(this.total/this.perPage)||1;if(this.showMyProfile&&this.items.length>0)this.myDistributor=this.items[0]}else{this.items=[];this.total=0;this.totalPages=1}}catch(e){console.error(e);this.items=[];Alpine.store('toast').error('Failed to load distributors')}finally{this.loading=false}},
     openAddModal(){this.isEditing=false;this.form={id:null,name:'',email:'',contactPerson:'',contactNumber:'',address:'',supplierId:'',modulePermissions:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''};this.errors={};this.logoPreview=null;this.logoFile=null;if(this.suppliers.length===0)this.fetchSuppliers();this.modalOpen=true},
     openEditModal(item){this.isEditing=true;this.form={id:item.id,name:item.name||'',email:item.email||'',contactPerson:item.contactPerson||item.contact_person||'',contactNumber:item.contactNumber||item.contact_number||'',address:item.address||'',supplierId:item.supplier_id||'',modulePermissions:(item.module_permissions&&typeof item.module_permissions==='object')?{sales:!!item.module_permissions.sales,inventory:!!item.module_permissions.inventory,procurement:!!item.module_permissions.procurement,customers:!!item.module_permissions.customers,reports:!!item.module_permissions.reports}:{sales:true,inventory:false,procurement:true,customers:true,reports:false},createLogin:false,loginUsername:'',loginPassword:''};this.logoPreview=item.logo?'/storage/'+item.logo:null;this.logoFile=null;this.errors={};this.modalOpen=true},
     closeModal(){this.modalOpen=false;this.logoFile=null;this.logoPreview=null;this.errors={}},

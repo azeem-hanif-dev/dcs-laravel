@@ -56,7 +56,19 @@ class PurchaseReturnController extends Controller
         // Reduce stock when returning to supplier
         foreach ($items as $item) {
             $stock = Stock::where('product_id', $item['product_id'])->where('company_id', $request->company_id)->first();
-            if ($stock) $stock->decrement('total_quantity', $item['quantity']);
+            if ($stock) {
+                $stock->decrement('total_quantity', $item['quantity']);
+                $stock->refresh();
+                $stock->logMovement(
+                    type:         'purchase_returned',
+                    change:       -$item['quantity'],
+                    userId:       $request->auth_user->id,
+                    refType:      'PurchaseReturn',
+                    refId:        $return->id,
+                    refNumber:    $return->return_number,
+                    notes:        "Return #{$return->return_number} to supplier — {$item['quantity']} units out"
+                );
+            }
             $material = \App\Models\Material\Material::find($item['product_id']);
             if ($material) $material->decrement('total_quantity', $item['quantity']);
         }
