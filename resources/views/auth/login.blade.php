@@ -142,7 +142,7 @@
                                 <span class="text-xs text-gray-400">Remember me</span>
                             </label>
                             <button type="button" @click="modalOpen = true; forgotCompanyId = companyData?.companyId; forgotEmail = ''; forgotMsg = ''"
-                                class="text-xs text-primary hover:text-primary-light transition-colors font-medium">Forgot password?</button>
+                                class="text-xs text-white/70 hover:text-white transition-colors font-medium">Forgot password?</button>
                         </div>
 
                         {{-- Error Message --}}
