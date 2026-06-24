@@ -18,6 +18,14 @@ class Payment extends Model
         'payment_date' => 'date',
     ];
 
+    /**
+     * Allowed payment methods.
+     */
+    public static function allowedMethods(): array
+    {
+        return ['Cash', 'Online'];
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
@@ -35,6 +43,6 @@ class Payment extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(Admin::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

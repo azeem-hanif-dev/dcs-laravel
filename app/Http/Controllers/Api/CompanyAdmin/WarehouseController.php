@@ -30,11 +30,16 @@ class WarehouseController extends Controller
         return $this->successResponse($warehouse, 'Warehouse created', 201);
     }
 
-    public function show($id) { return $this->successResponse(Warehouse::findOrFail($id)); }
+    public function show(Request $request, $id)
+    {
+        return $this->successResponse(
+            Warehouse::where('company_id', $request->company_id)->findOrFail($id)
+        );
+    }
 
     public function update(Request $request, $id)
     {
-        $warehouse = Warehouse::findOrFail($id);
+        $warehouse = Warehouse::where('company_id', $request->company_id)->findOrFail($id);
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'location' => 'nullable|string',
@@ -46,9 +51,10 @@ class WarehouseController extends Controller
         return $this->successResponse($warehouse, 'Warehouse updated');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        Warehouse::findOrFail($id)->delete();
+        $warehouse = Warehouse::where('company_id', $request->company_id)->findOrFail($id);
+        $warehouse->delete();
         return $this->successResponse(null, 'Warehouse deleted');
     }
 }

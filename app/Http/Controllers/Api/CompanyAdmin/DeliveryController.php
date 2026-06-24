@@ -4,18 +4,22 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Delivery;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class DeliveryController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = Delivery::where('company_id', $request->company_id)
-            ->with(['salesOrder.shop', 'shop'])->latest();
+            ->with(['salesOrder.shop', 'shop']);
+        // Delivery → Shop → Salesman → distributor_id
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Deliveries retrieved');
     }
 
@@ -40,23 +44,28 @@ class DeliveryController extends Controller
         return $this->successResponse($delivery->load('salesOrder'), 'Delivery created', 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        return $this->successResponse(
-            Delivery::with('salesOrder.items.product', 'shop')->findOrFail($id)
-        );
+        $query = Delivery::where('company_id', $request->company_id)
+            ->with('salesOrder.items.product', 'shop');
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function updateStatus(Request $request, $id)
     {
-        $delivery = Delivery::findOrFail($id);
+        $query = Delivery::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $delivery = $query->findOrFail($id);
+
+        $this->authorizeStatusUpdate($delivery, $request);
+
         $request->validate([
             'status' => 'required|in:Pending,Dispatched,In Transit,Delivered,Failed'
         ]);
 
         $newStatus = $request->status;
 
-        // Stock logic: when delivered, decrement stock
         if ($newStatus === 'Delivered' && $delivery->salesOrder) {
             $order = $delivery->salesOrder;
             foreach ($order->items as $item) {
@@ -76,9 +85,12 @@ class DeliveryController extends Controller
         return $this->successResponse($delivery, "Delivery status updated to {$newStatus}");
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        Delivery::findOrFail($id)->delete();
+        $query = Delivery::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $delivery = $query->findOrFail($id);
+        $delivery->delete();
         return $this->successResponse(null, 'Delivery deleted');
     }
 }

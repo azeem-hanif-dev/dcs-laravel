@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\SalesReturn;
 use App\Models\SalesReturnItem;
 use App\Models\Stock;
@@ -11,12 +12,15 @@ use Illuminate\Http\Request;
 
 class SalesReturnController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = SalesReturn::where('company_id', $request->company_id)
-            ->with(['shop', 'salesOrder', 'items.product'])->latest();
+            ->with(['shop', 'salesOrder', 'items.product']);
+        // SalesReturn → Shop → Salesman → distributor_id
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Sales returns retrieved');
     }
 
@@ -51,7 +55,6 @@ class SalesReturnController extends Controller
         }
         $return->update(['total_amount' => $total]);
 
-        // Return stock to inventory
         foreach ($items as $item) {
             $stock = Stock::where('product_id', $item['product_id'])->where('company_id', $request->company_id)->first();
             if ($stock) $stock->increment('total_quantity', $item['quantity']);
@@ -62,15 +65,33 @@ class SalesReturnController extends Controller
         return $this->successResponse($return->load('items.product', 'shop'), 'Sales return created', 201);
     }
 
-    public function show($id) { return $this->successResponse(SalesReturn::with('items.product','shop','salesOrder')->findOrFail($id)); }
+    public function show(Request $request, $id)
+    {
+        $query = SalesReturn::where('company_id', $request->company_id)
+            ->with('items.product', 'shop', 'salesOrder');
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        return $this->successResponse($query->findOrFail($id));
+    }
 
     public function updateStatus(Request $request, $id)
     {
-        $return = SalesReturn::findOrFail($id);
+        $query = SalesReturn::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $return = $query->findOrFail($id);
+
+        $this->authorizeStatusUpdate($return, $request);
+
         $request->validate(['status' => 'required|in:Pending,Approved,Completed,Rejected']);
         $return->update(['status' => $request->status]);
         return $this->successResponse($return, 'Status updated');
     }
 
-    public function destroy($id) { SalesReturn::findOrFail($id)->delete(); return $this->successResponse(null, 'Deleted'); }
+    public function destroy(Request $request, $id)
+    {
+        $query = SalesReturn::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        $return = $query->findOrFail($id);
+        $return->delete();
+        return $this->successResponse(null, 'Deleted');
+    }
 }

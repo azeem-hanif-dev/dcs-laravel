@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Api\CompanyAdmin\Material;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Material\Supplier;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
-        $query = Supplier::where('company_id', $request->company_id)->latest();
+        $query = Supplier::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Suppliers retrieved');
     }
 
@@ -33,7 +36,6 @@ class SupplierController extends Controller
         ]);
         $data['user_id'] = $request->auth_user->id;
         $data['company_id'] = $request->company_id;
-        // Map camelCase to snake_case
         if (isset($data['contactPerson'])) { $data['contact_person'] = $data['contactPerson']; unset($data['contactPerson']); }
         if (isset($data['contactNumber'])) { $data['contact_number'] = $data['contactNumber']; unset($data['contactNumber']); }
         $supplier = Supplier::create($data);
@@ -42,13 +44,17 @@ class SupplierController extends Controller
 
     public function show(Request $request, $id)
     {
-        $supplier = Supplier::where('company_id', $request->company_id)->findOrFail($id);
-        return $this->successResponse($supplier);
+        $query = Supplier::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $supplier = Supplier::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Supplier::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $supplier = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email',
@@ -66,7 +72,9 @@ class SupplierController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $supplier = Supplier::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Supplier::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $supplier = $query->findOrFail($id);
         $supplier->delete();
         return $this->successResponse(null, 'Supplier deleted successfully');
     }

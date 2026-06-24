@@ -4,18 +4,21 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\PurchaseReturn;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class PurchaseReturnController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = PurchaseReturn::where('company_id', $request->company_id)
-            ->with(['supplier', 'purchaseOrder', 'items.product'])->latest();
+            ->with(['supplier', 'purchaseOrder', 'items.product']);
+        $query = $this->applyVisibility($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Purchase returns retrieved');
     }
 
@@ -61,15 +64,33 @@ class PurchaseReturnController extends Controller
         return $this->successResponse($return->load('items.product', 'supplier'), 'Purchase return created', 201);
     }
 
-    public function show($id) { return $this->successResponse(PurchaseReturn::with('items.product','supplier','purchaseOrder')->findOrFail($id)); }
+    public function show(Request $request, $id)
+    {
+        $query = PurchaseReturn::where('company_id', $request->company_id)
+            ->with('items.product', 'supplier', 'purchaseOrder');
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
+    }
 
     public function updateStatus(Request $request, $id)
     {
-        $return = PurchaseReturn::findOrFail($id);
+        $query = PurchaseReturn::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $return = $query->findOrFail($id);
+
+        $this->authorizeStatusUpdate($return, $request);
+
         $request->validate(['status' => 'required|in:Pending,Approved,Completed,Rejected']);
         $return->update(['status' => $request->status]);
         return $this->successResponse($return, 'Status updated');
     }
 
-    public function destroy($id) { PurchaseReturn::findOrFail($id)->delete(); return $this->successResponse(null, 'Deleted'); }
+    public function destroy(Request $request, $id)
+    {
+        $query = PurchaseReturn::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $return = $query->findOrFail($id);
+        $return->delete();
+        return $this->successResponse(null, 'Deleted');
+    }
 }

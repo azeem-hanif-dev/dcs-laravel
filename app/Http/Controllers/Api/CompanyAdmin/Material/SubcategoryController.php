@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Api\CompanyAdmin\Material;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Material\Subcategory;
 use Illuminate\Http\Request;
 
 class SubcategoryController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
@@ -17,6 +18,7 @@ class SubcategoryController extends Controller
         if ($request->categoryId) {
             $query->where('category_id', $request->categoryId);
         }
+        $query = $this->applyVisibility($query, $request);
         return $this->paginatedResponse($query->with('category')->latest(), $request, 'Subcategories retrieved');
     }
 
@@ -37,13 +39,17 @@ class SubcategoryController extends Controller
 
     public function show(Request $request, $id)
     {
-        $subcategory = Subcategory::where('company_id', $request->company_id)->with('category')->findOrFail($id);
-        return $this->successResponse($subcategory);
+        $query = Subcategory::where('company_id', $request->company_id)->with('category');
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $subcategory = Subcategory::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Subcategory::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $subcategory = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'required|string',
             'categoryId' => 'sometimes|exists:categories,id',
@@ -55,7 +61,9 @@ class SubcategoryController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $subcategory = Subcategory::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Subcategory::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $subcategory = $query->findOrFail($id);
         $subcategory->delete();
         return $this->successResponse(null, 'Subcategory deleted successfully');
     }

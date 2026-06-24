@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
-        $query = Shop::where('company_id', $request->company_id)
-            ->with('salesman')->latest();
+        $query = Shop::where('company_id', $request->company_id)->with('salesman');
+        // Shops linked to salesmen who have distributor_id — use through scope
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Shops retrieved');
     }
 
@@ -41,16 +44,20 @@ class ShopController extends Controller
         return $this->successResponse($shop->load('salesman'), 'Shop created', 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        return $this->successResponse(
-            Shop::with('salesman', 'salesOrders', 'invoices')->findOrFail($id)
-        );
+        $query = Shop::where('company_id', $request->company_id)
+            ->with('salesman', 'salesOrders', 'invoices');
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $shop = Shop::findOrFail($id);
+        $query = Shop::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $shop = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'owner_name' => 'nullable|string|max:255',
@@ -71,9 +78,12 @@ class ShopController extends Controller
         return $this->successResponse($shop->load('salesman'), 'Shop updated');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        Shop::findOrFail($id)->delete();
+        $query = Shop::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $shop = $query->findOrFail($id);
+        $shop->delete();
         return $this->successResponse(null, 'Shop deleted');
     }
 }

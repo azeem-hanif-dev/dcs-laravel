@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Salesman;
 use Illuminate\Http\Request;
 
 class SalesmanController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
-        $query = Salesman::where('company_id', $request->company_id)
-            ->with('distributor')->latest();
+        $query = Salesman::where('company_id', $request->company_id)->with('distributor');
+        // Salesmen linked via distributor_id — use distributor scope
+        $query = $this->applyDistributorScope($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Salesmen retrieved');
     }
 
@@ -34,11 +37,19 @@ class SalesmanController extends Controller
         return $this->successResponse($salesman, 'Salesman created', 201);
     }
 
-    public function show($id) { return $this->successResponse(Salesman::with('distributor')->findOrFail($id)); }
+    public function show(Request $request, $id)
+    {
+        $query = Salesman::where('company_id', $request->company_id)->with('distributor');
+        $query = $this->applyDistributorScope($query, $request);
+        return $this->successResponse($query->findOrFail($id));
+    }
 
     public function update(Request $request, $id)
     {
-        $salesman = Salesman::findOrFail($id);
+        $query = Salesman::where('company_id', $request->company_id);
+        $query = $this->applyDistributorScope($query, $request);
+        $salesman = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'nullable|email|max:255',
@@ -52,9 +63,12 @@ class SalesmanController extends Controller
         return $this->successResponse($salesman, 'Salesman updated');
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        Salesman::findOrFail($id)->delete();
+        $query = Salesman::where('company_id', $request->company_id);
+        $query = $this->applyDistributorScope($query, $request);
+        $salesman = $query->findOrFail($id);
+        $salesman->delete();
         return $this->successResponse(null, 'Salesman deleted');
     }
 }

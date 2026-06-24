@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Api\CompanyAdmin\Material;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Material\Material;
 use Illuminate\Http\Request;
 
 class MaterialController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = Material::where('company_id', $request->company_id)
-            ->with(['category', 'subcategory', 'supplier'])->latest();
+            ->with(['category', 'subcategory', 'supplier']);
+        $query = $this->applyVisibility($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Materials retrieved');
     }
 
@@ -46,14 +49,18 @@ class MaterialController extends Controller
 
     public function show(Request $request, $id)
     {
-        $material = Material::where('company_id', $request->company_id)
-            ->with(['category', 'subcategory', 'supplier'])->findOrFail($id);
-        return $this->successResponse($material);
+        $query = Material::where('company_id', $request->company_id)
+            ->with(['category', 'subcategory', 'supplier']);
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $material = Material::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Material::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $material = $query->findOrFail($id);
+
         $data = $request->validate([
             'materialName' => 'sometimes|string',
             'categoryId' => 'sometimes|exists:categories,id',
@@ -78,7 +85,9 @@ class MaterialController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $material = Material::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Material::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $material = $query->findOrFail($id);
         $material->delete();
         return $this->successResponse(null, 'Material deleted successfully');
     }

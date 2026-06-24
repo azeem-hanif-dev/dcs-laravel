@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\Stock;
@@ -12,13 +13,17 @@ use Illuminate\Http\Request;
 
 class SalesOrderController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = SalesOrder::where('company_id', $request->company_id)
-            ->with(['shop', 'salesman', 'items.product'])
-            ->latest();
+            ->with(['shop', 'salesman', 'items.product']);
+
+        // Sales orders: visible if created by user OR linked to their salesman/shop chain
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Sales orders retrieved');
     }
 
@@ -59,16 +64,20 @@ class SalesOrderController extends Controller
         return $this->successResponse($order->load('items.product', 'shop'), 'Sales order created', 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        return $this->successResponse(
-            SalesOrder::with('items.product', 'shop', 'salesman', 'invoice', 'delivery')->findOrFail($id)
-        );
+        $query = SalesOrder::where('company_id', $request->company_id)
+            ->with('items.product', 'shop', 'salesman', 'invoice', 'delivery');
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
     {
-        $order = SalesOrder::findOrFail($id);
+        $query = SalesOrder::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $order = $query->findOrFail($id);
+
         $data = $request->validate([
             'shop_id' => 'sometimes|exists:shops,id',
             'salesman_id' => 'nullable|exists:salesmen,id',
@@ -87,7 +96,12 @@ class SalesOrderController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
-        $order = SalesOrder::findOrFail($id);
+        $query = SalesOrder::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $order = $query->findOrFail($id);
+
+        $this->authorizeStatusUpdate($order, $request);
+
         $request->validate([
             'status' => 'required|in:Draft,Confirmed,Processing,Ready,Delivered,Cancelled'
         ]);
@@ -97,7 +111,6 @@ class SalesOrderController extends Controller
 
         $order->update(['status' => $newStatus]);
 
-        // Stock logic: reserve stock when confirmed
         if ($newStatus === 'Confirmed' && $oldStatus !== 'Confirmed') {
             foreach ($order->items as $item) {
                 $stock = Stock::firstOrCreate(
@@ -107,12 +120,12 @@ class SalesOrderController extends Controller
                 $stock->increment('reserved_quantity', $item->quantity);
             }
 
-            // Auto-generate invoice when confirmed
             if (!Invoice::where('sales_order_id', $order->id)->exists()) {
                 Invoice::create([
-                    'invoice_number' => \App\Models\Invoice::generateInvoiceNumber(),
+                    'invoice_number' => Invoice::generateInvoiceNumber(),
                     'sales_order_id' => $order->id,
                     'shop_id' => $order->shop_id,
+                    'invoice_type' => 'sales',
                     'invoice_date' => now()->toDateString(),
                     'due_date' => now()->addDays(30)->toDateString(),
                     'total_amount' => $order->grand_total,
@@ -124,7 +137,6 @@ class SalesOrderController extends Controller
             }
         }
 
-        // Stock logic: release stock when cancelled (if was confirmed)
         if ($newStatus === 'Cancelled' && $oldStatus === 'Confirmed') {
             foreach ($order->items as $item) {
                 $stock = Stock::where('product_id', $item->product_id)
@@ -139,9 +151,12 @@ class SalesOrderController extends Controller
         return $this->successResponse($order, "Sales order status updated to {$newStatus}");
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        SalesOrder::findOrFail($id)->delete();
+        $query = SalesOrder::where('company_id', $request->company_id);
+        $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        $order = $query->findOrFail($id);
+        $order->delete();
         return $this->successResponse(null, 'Sales order deleted');
     }
 }

@@ -4,21 +4,24 @@ namespace App\Http\Controllers\Api\CompanyAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Stock;
 use App\Models\Material\Material;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function overview(Request $request)
     {
         $query = Stock::where('company_id', $request->company_id)
             ->with(['product' => function ($q) {
                 $q->with('category', 'supplier');
-            }, 'warehouse'])
-            ->latest();
+            }, 'warehouse']);
+
+        // Distributor filter (stock records don't have user_id, so show all for all roles)
+        // But we still filter by company_id
 
         if ($request->warehouse_id) {
             $query->where('warehouse_id', $request->warehouse_id);
@@ -27,6 +30,7 @@ class StockController extends Controller
             $query->whereRaw('(total_quantity - reserved_quantity) <= reorder_level');
         }
 
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Stock overview retrieved');
     }
 

@@ -4,19 +4,21 @@ namespace App\Http\Controllers\Api\CompanyAdmin\Material;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApiResponse;
+use App\Traits\DistributorVisibility;
 use App\Models\Material\Distributor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class DistributorController extends Controller
 {
-    use ApiResponse;
+    use ApiResponse, DistributorVisibility;
 
     public function index(Request $request)
     {
         $query = Distributor::where('company_id', $request->company_id)
-            ->with('supplier')
-            ->latest();
+            ->with('supplier');
+        $query = $this->applyVisibility($query, $request);
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Distributors retrieved');
     }
 
@@ -94,10 +96,9 @@ class DistributorController extends Controller
 
     public function show(Request $request, $id)
     {
-        $distributor = Distributor::where('company_id', $request->company_id)
-            ->with('supplier')
-            ->findOrFail($id);
-        return $this->successResponse($distributor);
+        $query = Distributor::where('company_id', $request->company_id)->with('supplier');
+        $query = $this->applyVisibility($query, $request);
+        return $this->successResponse($query->findOrFail($id));
     }
 
     public function update(Request $request, $id)
@@ -115,7 +116,10 @@ class DistributorController extends Controller
             return response()->json(['success' => false, 'message' => 'Access denied'], 403);
         }
 
-        $distributor = Distributor::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Distributor::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $distributor = $query->findOrFail($id);
+
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email',
@@ -142,7 +146,10 @@ class DistributorController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $distributor = Distributor::where('company_id', $request->company_id)->findOrFail($id);
+        $query = Distributor::where('company_id', $request->company_id);
+        $query = $this->applyVisibility($query, $request);
+        $distributor = $query->findOrFail($id);
+
         if ($distributor->logo) { Storage::disk('public')->delete($distributor->logo); }
         $distributor->delete();
         return $this->successResponse(null, 'Distributor deleted successfully');
