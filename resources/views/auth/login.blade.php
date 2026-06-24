@@ -24,13 +24,13 @@
 
         {{-- Card with subtle glass effect --}}
         <div class="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/20 animate-fade-in-up">
-            <div class="p-10 sm:p-12">
+            <div class="pt-2 px-6 sm:px-8" style="padding-bottom: 3rem;">
 
                 {{-- Logo --}}
-                <div class="flex justify-center mb-8">
+                <div class="flex justify-center">
                     <div class="relative flex items-center justify-center">
                         <img src="/common/Vilera_logo_animation.gif" alt="Distributor Logo"
-                            class="h-16 sm:h-20 w-auto" style="filter: brightness(0) invert(1);" />
+                            style="height:10rem;filter:brightness(0)invert(1);" class="w-auto" />
                     </div>
                 </div>
 
