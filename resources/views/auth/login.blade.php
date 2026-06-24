@@ -3,43 +3,6 @@
 @section('title', 'Login - Distributor Portal')
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-[#0f1d36] to-slate-900 relative overflow-hidden">
-    {{-- Custom login logo animation styles --}}
-    <style>
-        @keyframes logo-glow {
-            0%, 100% { transform: scale(1); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 18px rgba(46,168,250,0.5)) drop-shadow(0 0 40px rgba(46,168,250,0.3)); }
-            50%      { transform: scale(1.08); filter: brightness(0) saturate(100%) invert(1) drop-shadow(0 0 28px rgba(46,168,250,0.9)) drop-shadow(0 0 60px rgba(46,168,250,0.5)); }
-        }
-        .login-logo-animate {
-            animation: logo-glow 2.5s ease-in-out infinite;
-        }
-        @keyframes logo-ring-pulse {
-            0%, 100% { transform: scale(0.85); opacity: 0.2; border-color: rgba(46,168,250,0.4); box-shadow: 0 0 15px rgba(46,168,250,0.1); }
-            50%      { transform: scale(1.2); opacity: 0.6; border-color: rgba(46,168,250,0.9); box-shadow: 0 0 35px rgba(46,168,250,0.4); }
-        }
-        .login-logo-ring {
-            animation: logo-ring-pulse 2.5s ease-in-out infinite;
-        }
-        .login-logo-ring-delayed {
-            animation: logo-ring-pulse 2.5s ease-in-out infinite 0.7s;
-        }
-        @keyframes logo-spin {
-            0%   { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .login-logo-spin {
-            animation: logo-spin 8s linear infinite;
-        }
-        .login-logo-spin-reverse {
-            animation: logo-spin 10s linear infinite reverse;
-        }
-        @keyframes logo-blur-breathe {
-            0%, 100% { transform: scale(0.9); opacity: 0.3; }
-            50%      { transform: scale(1.4); opacity: 0.7; }
-        }
-        .login-logo-blur {
-            animation: logo-blur-breathe 3s ease-in-out infinite;
-        }
-    </style>
 
     {{-- Background decorative elements --}}
     <div class="absolute inset-0 pointer-events-none">
@@ -63,22 +26,11 @@
         <div class="bg-white/[0.03] backdrop-blur-xl rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/20 animate-fade-in-up">
             <div class="p-10 sm:p-12">
 
-                {{-- Logo with animated glow rings --}}
+                {{-- Logo --}}
                 <div class="flex justify-center mb-8">
                     <div class="relative flex items-center justify-center">
-                        {{-- Spinning gradient arc --}}
-                        <div class="absolute w-38 h-38 rounded-full border-[2px] border-transparent border-t-primary border-r-primary/50 login-logo-spin"></div>
-                        {{-- Reverse spinning arc --}}
-                        <div class="absolute w-32 h-32 rounded-full border-[1.5px] border-transparent border-b-primary/70 border-l-primary/25 login-logo-spin-reverse"></div>
-                        {{-- Pulsing ring 1 --}}
-                        <div class="absolute w-28 h-28 rounded-full border-2 login-logo-ring"></div>
-                        {{-- Pulsing ring 2 (delayed) --}}
-                        <div class="absolute w-34 h-34 rounded-full border login-logo-ring-delayed"></div>
-                        {{-- Center soft glow --}}
-                        <div class="absolute w-24 h-24 bg-primary/40 rounded-full blur-2xl login-logo-blur"></div>
-                        {{-- Logo --}}
-                        <img src="/common/vilera-logo-03.png" alt="Distributor Logo"
-                            class="relative h-12 sm:h-14 w-auto login-logo-animate" />
+                        <img src="/common/Vilera_logo_animation.gif" alt="Distributor Logo"
+                            class="h-16 sm:h-20 w-auto" style="filter: brightness(0) invert(1);" />
                     </div>
                 </div>
 
