@@ -32,7 +32,7 @@
 
     {{-- Logo --}}
     <div class="py-6 px-8 flex justify-center">
-        <img src="/common/distributor-logo.svg" alt="Distributor Logo" class="w-36 object-contain" />
+        <img src="/common/vilera-logo-02.png" alt="Distributor Logo" style="max-width:160px;width:100%" />
     </div>
 
     {{-- Navigation --}}

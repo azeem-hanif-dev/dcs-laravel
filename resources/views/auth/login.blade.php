@@ -77,8 +77,8 @@
                         {{-- Center soft glow --}}
                         <div class="absolute w-24 h-24 bg-primary/40 rounded-full blur-2xl login-logo-blur"></div>
                         {{-- Logo --}}
-                        <img src="/common/distributor-logo.svg" alt="Distributor Logo"
-                            class="relative h-16 sm:h-20 w-auto login-logo-animate" />
+                        <img src="/common/vilera-logo-03.png" alt="Distributor Logo"
+                            class="relative h-12 sm:h-14 w-auto login-logo-animate" />
                     </div>
                 </div>
 

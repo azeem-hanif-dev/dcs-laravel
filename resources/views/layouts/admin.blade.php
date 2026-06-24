@@ -15,13 +15,7 @@
 {{-- Full-page loader (hidden by Alpine once ready) --}}
 <div x-data x-init="$el.remove()" class="page-loader" id="pageLoader">
     <div class="loader-content">
-        <img src="/common/distributor-logo.svg" alt="DCS" class="loader-logo logo-white" style="filter: brightness(0) saturate(100%); height: 3rem; margin-bottom: 1rem; opacity: 0.5;" />
-        <div class="flex justify-center">
-            <svg class="spinner w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-        </div>
+        <img src="/common/Vilera_logo_animation.gif" alt="Loading..." class="loader-logo" style="height: 5rem; margin-bottom: 1rem;" />
     </div>
 </div>
 

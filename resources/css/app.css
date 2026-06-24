@@ -7,9 +7,9 @@
 
 @theme {
     --font-sans: 'Urbanist', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --color-primary: #2EA8FA;
-    --color-primary-dark: #1E8ED8;
-    --color-primary-light: #60C0FF;
+    --color-primary: #243672;
+    --color-primary-dark: #1a274f;
+    --color-primary-light: #3b52a0;
 }
 
 body { font-family: 'Urbanist', sans-serif; }
@@ -26,7 +26,7 @@ body { font-family: 'Urbanist', sans-serif; }
 }
 .page-loader.fade-out { opacity: 0; pointer-events: none; }
 .page-loader .loader-content { text-align: center; }
-.page-loader .loader-logo { height: 3rem; margin-bottom: 1rem; opacity: 0.7; }
+.page-loader .loader-logo { margin-bottom: 0.5rem; }
 
 @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .spinner { animation: spinner 0.8s linear infinite; }
@@ -78,9 +78,9 @@ body { font-family: 'Urbanist', sans-serif; }
     width: 100%;
 }
 
-/* Branded table header gradient matching logo colors (#2EA8FA -> #1E8ED8) */
+/* Branded table header gradient matching logo colors (#243672 -> #1a274f) */
 .table-header-branded {
-    background: linear-gradient(135deg, #2EA8FA 0%, #1E8ED8 100%);
+    background: linear-gradient(135deg, #243672 0%, #1a274f 100%);
 }
 .table-header-branded th {
     color: #fff !important;
@@ -199,7 +199,7 @@ body { font-family: 'Urbanist', sans-serif; }
     background: #f9fafb;
 }
 .pagination-btn.active {
-    background: linear-gradient(135deg, #2EA8FA, #1E8ED8);
+    background: linear-gradient(135deg, #243672, #1a274f);
     color: #fff;
     border-color: transparent;
     font-weight: 600;
@@ -229,7 +229,7 @@ body { font-family: 'Urbanist', sans-serif; }
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 .search-bar input:focus {
-    border-color: #2EA8FA;
+    border-color: #243672;
     box-shadow: 0 0 0 3px rgba(46,168,250,0.12);
     outline: none;
 }
