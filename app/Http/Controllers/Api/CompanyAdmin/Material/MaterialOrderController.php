@@ -20,7 +20,7 @@ class MaterialOrderController extends Controller
     {
         $query = MaterialOrder::where('company_id', $request->company_id)
             ->with('items.material', 'items.supplier', 'orderedBy');
-        $query = $this->applyVisibility($query, $request, 'ordered_by');
+        $query = $this->applyPOVisibility($query, $request);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Orders retrieved');
     }
@@ -75,7 +75,7 @@ class MaterialOrderController extends Controller
     {
         $query = MaterialOrder::where('company_id', $request->company_id)
             ->with('items.material', 'items.supplier', 'orderedBy');
-        $query = $this->applyVisibility($query, $request, 'ordered_by');
+        $query = $this->applyPOVisibility($query, $request);
         $order = $query->findOrFail($id);
         return $this->successResponse($order);
     }
@@ -83,7 +83,7 @@ class MaterialOrderController extends Controller
     public function update(Request $request, $id)
     {
         $query = MaterialOrder::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request, 'ordered_by');
+        $query = $this->applyPOVisibility($query, $request);
         $order = $query->findOrFail($id);
 
         $data = $request->validate([
@@ -125,7 +125,7 @@ class MaterialOrderController extends Controller
     public function destroy(Request $request, $id)
     {
         $query = MaterialOrder::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request, 'ordered_by');
+        $query = $this->applyPOVisibility($query, $request);
         $order = $query->findOrFail($id);
         $order->items()->delete();
         $order->delete();
@@ -144,7 +144,7 @@ class MaterialOrderController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $query = MaterialOrder::where('company_id', $request->company_id);
-        $query = $this->applyVisibility($query, $request, 'ordered_by');
+        $query = $this->applyPOVisibility($query, $request);
         $order = $query->findOrFail($id);
 
         // Permission check: distributor can only update their own records
@@ -266,5 +266,30 @@ class MaterialOrderController extends Controller
                 ? 'Order delivered. Procurement invoice auto-generated. Now record payment.'
                 : "Order status updated to {$newStatus}"
         );
+    }
+
+    /**
+     * Distributor sees POs they created OR POs containing products from their supplier.
+     */
+    private function applyPOVisibility($query, Request $request)
+    {
+        $user = $request->auth_user;
+        if (!$user || in_array($user->role, ['superadmin', 'admin'])) return $query;
+        if ($user->role !== 'distributor') return $query->where('ordered_by', $user->id);
+
+        $distributor = \App\Models\Material\Distributor::find($user->distributor_id);
+        $supplierId = $distributor?->supplier_id;
+
+        return $query->where(function ($q) use ($user, $supplierId) {
+            // POs created by this distributor
+            $q->where('ordered_by', $user->id);
+
+            // OR POs containing products from this distributor's supplier
+            if ($supplierId) {
+                $q->orWhereHas('items.material', function ($sub) use ($supplierId) {
+                    $sub->where('supplier_id', $supplierId);
+                });
+            }
+        });
     }
 }
