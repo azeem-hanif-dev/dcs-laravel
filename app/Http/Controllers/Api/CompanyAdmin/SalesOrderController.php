@@ -110,7 +110,6 @@ class SalesOrderController extends Controller
             ]);
         }
     }
-    }
 
     public function show(Request $request, $id)
     {
