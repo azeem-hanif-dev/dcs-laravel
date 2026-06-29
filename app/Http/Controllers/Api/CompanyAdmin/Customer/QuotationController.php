@@ -16,10 +16,16 @@ class QuotationController extends Controller
     public function index(Request $request)
     {
         $query = Quotation::where('company_id', $request->company_id)
-            ->with('quoteDetails.worker')
-            ->latest();
+            ->with('quoteDetails.worker');
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('companyName', 'like', "%{$s}%")
+                  ->orWhere('contactPerson', 'like', "%{$s}%");
+            });
+        }
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Quotations retrieved');
-        return $this->successResponse($quotations);
     }
 
     public function store(Request $request)

@@ -21,6 +21,14 @@ class MaterialOrderController extends Controller
         $query = MaterialOrder::where('company_id', $request->company_id)
             ->with('items.material', 'items.supplier', 'orderedBy');
         $query = $this->applyPOVisibility($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('po_number', 'like', "%{$s}%")
+                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Orders retrieved');
     }

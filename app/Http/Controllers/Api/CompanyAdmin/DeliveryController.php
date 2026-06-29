@@ -19,6 +19,15 @@ class DeliveryController extends Controller
             ->with(['salesOrder.shop', 'shop']);
         // Delivery → Shop → Salesman → distributor_id
         $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('tracking_number', 'like', "%{$s}%")
+                  ->orWhere('driver_name', 'like', "%{$s}%")
+                  ->orWhereHas('shop', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Deliveries retrieved');
     }

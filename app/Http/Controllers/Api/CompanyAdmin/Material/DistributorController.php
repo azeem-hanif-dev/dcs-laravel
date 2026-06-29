@@ -26,6 +26,13 @@ class DistributorController extends Controller
             $query->where('user_id', $user->id);
         }
         $query->latest();
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+            });
+        }
+        if ($request->supplier_id) $query->where('supplier_id', $request->supplier_id);
         return $this->paginatedResponse($query, $request, 'Distributors retrieved');
     }
 

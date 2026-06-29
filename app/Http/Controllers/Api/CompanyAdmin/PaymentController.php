@@ -20,6 +20,13 @@ class PaymentController extends Controller
 
         // Payments visible if the linked invoice is visible to the distributor
         $query = $this->applyPaymentVisibility($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('reference_number', 'like', "%{$s}%")
+                  ->orWhereHas('invoice', fn($sq) => $sq->where('invoice_number', 'like', "%{$s}%"));
+            });
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Payments retrieved');
     }

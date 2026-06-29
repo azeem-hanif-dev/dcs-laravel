@@ -19,6 +19,15 @@ class InvoiceController extends Controller
 
         // Distributor sees: own invoices + invoices linked to their entities
         $query = $this->applyInvoiceVisibility($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('invoice_number', 'like', "%{$s}%")
+                  ->orWhereHas('shop', fn($sq) => $sq->where('name', 'like', "%{$s}%"))
+                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Invoices retrieved');
     }

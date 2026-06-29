@@ -16,6 +16,9 @@ class CategoryController extends Controller
     {
         $query = Category::where('company_id', $request->company_id)->with('subcategories');
         $query = $this->applyCategoryVisibility($query, $request);
+        if ($request->search) {
+            $query->where('name', 'like', "%{$request->search}%");
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Categories retrieved');
     }

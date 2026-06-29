@@ -17,6 +17,12 @@ class ShopController extends Controller
         $query = Shop::where('company_id', $request->company_id)->with('salesman');
         // Shops linked to salesmen who have distributor_id — use through scope
         $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")->orWhere('owner_name', 'like', "%{$s}%")->orWhere('city', 'like', "%{$s}%");
+            });
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Shops retrieved');
     }

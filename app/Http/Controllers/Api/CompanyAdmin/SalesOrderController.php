@@ -23,6 +23,15 @@ class SalesOrderController extends Controller
         // Sales orders: visible if created by user OR linked to their salesman/shop chain
         $query = $this->applyDistributorThroughScope($query, $request, 'salesman');
 
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('so_number', 'like', "%{$s}%")
+                  ->orWhereHas('shop', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
+
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Sales orders retrieved');
     }
@@ -61,46 +70,46 @@ class SalesOrderController extends Controller
             $order->items()->create($item);
         }
 
-        // Only reserve stock if status is Confirmed or beyond (not Draft/Processing)
-        if (in_array($order->status, ['Confirmed', 'Ready', 'Delivered'])) {
-            if ($order->warehouse_id) {
-                foreach ($order->items as $item) {
-                    $stock = Stock::firstOrCreate(
-                        ['product_id' => $item->product_id, 'warehouse_id' => $order->warehouse_id, 'company_id' => $order->company_id],
-                        ['total_quantity' => 0, 'reserved_quantity' => 0]
-                    );
-                    $stock->increment('reserved_quantity', $item->quantity);
-                    $stock->refresh();
-                    $stock->logMovement(
-                        type: 'reserved',
-                        change: $item->quantity,
-                        userId: $request->auth_user->id,
-                        refType: 'SalesOrder',
-                        refId: $order->id,
-                        refNumber: $order->so_number,
-                        notes: "SO #{$order->so_number} created as Confirmed — reserved {$item->quantity} units"
-                    );
-                }
-            }
-
-            if (!Invoice::where('sales_order_id', $order->id)->exists()) {
-                Invoice::create([
-                    'invoice_number' => Invoice::generateInvoiceNumber(),
-                    'sales_order_id' => $order->id,
-                    'shop_id' => $order->shop_id,
-                    'invoice_type' => 'sales',
-                    'invoice_date' => now()->toDateString(),
-                    'due_date' => now()->addDays(30)->toDateString(),
-                    'total_amount' => $order->grand_total,
-                    'paid_amount' => 0,
-                    'status' => 'Unpaid',
-                    'company_id' => $order->company_id,
-                    'user_id' => $request->auth_user->id,
-                ]);
-            }
+        // If created as Confirmed or beyond, reserve stock + generate invoice
+        try {
+            $this->handleStockReserve($order, $request);
+        } catch (\Exception $e) {
+            // Order created but stock reserve failed — log and continue
+            \Log::error('SO stock reserve failed: ' . $e->getMessage(), ['so_id' => $order->id]);
         }
 
         return $this->successResponse($order->load('items.product', 'shop'), 'Sales order created', 201);
+    }
+
+    private function handleStockReserve($order, $request) {
+        if (!in_array($order->status, ['Confirmed', 'Ready', 'Delivered'])) return;
+        if (!$order->warehouse_id) return;
+
+        foreach ($order->items as $item) {
+            $stock = Stock::firstOrCreate(
+                ['product_id' => $item->product_id, 'warehouse_id' => $order->warehouse_id, 'company_id' => $order->company_id],
+                ['total_quantity' => 0, 'reserved_quantity' => 0]
+            );
+            $stock->increment('reserved_quantity', $item->quantity);
+            $stock->refresh();
+            $stock->logMovement(
+                type: 'reserved', change: $item->quantity, userId: $request->auth_user->id,
+                refType: 'SalesOrder', refId: $order->id, refNumber: $order->so_number,
+                notes: "SO #{$order->so_number} created as Confirmed — reserved {$item->quantity} units"
+            );
+        }
+
+        if (!Invoice::where('sales_order_id', $order->id)->exists()) {
+            Invoice::create([
+                'invoice_number' => Invoice::generateInvoiceNumber(),
+                'sales_order_id' => $order->id, 'shop_id' => $order->shop_id,
+                'invoice_type' => 'sales', 'invoice_date' => now()->toDateString(),
+                'due_date' => now()->addDays(30)->toDateString(), 'total_amount' => $order->grand_total,
+                'paid_amount' => 0, 'status' => 'Unpaid',
+                'company_id' => $order->company_id, 'user_id' => $request->auth_user->id,
+            ]);
+        }
+    }
     }
 
     public function show(Request $request, $id)

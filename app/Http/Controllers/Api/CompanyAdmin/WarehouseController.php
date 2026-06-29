@@ -13,7 +13,14 @@ class WarehouseController extends Controller
 
     public function index(Request $request)
     {
-        $query = Warehouse::where('company_id', $request->company_id)->latest();
+        $query = Warehouse::where('company_id', $request->company_id);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")->orWhere('location', 'like', "%{$s}%");
+            });
+        }
+        $query->latest();
         return $this->paginatedResponse($query, $request, 'Warehouses retrieved');
     }
 

@@ -7,6 +7,7 @@ use App\Http\Resources\ApiResponse;
 use App\Traits\DistributorVisibility;
 use App\Models\Material\Material;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MaterialController extends Controller
 {
@@ -17,6 +18,16 @@ class MaterialController extends Controller
         $query = Material::where('company_id', $request->company_id)
             ->with(['category', 'subcategory', 'supplier']);
         $query = $this->applyProductVisibility($query, $request);
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('material_name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
+
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Materials retrieved');
     }
@@ -43,8 +54,12 @@ class MaterialController extends Controller
         if (isset($data['supplierId'])) { $data['supplier_id'] = $data['supplierId']; unset($data['supplierId']); }
         $data['user_id'] = $request->auth_user->id;
         $data['company_id'] = $request->company_id;
-        $material = Material::create($data);
-        return $this->successResponse($material, 'Material created successfully', 201);
+        try {
+            $material = Material::create($data);
+            return $this->successResponse($material, 'Material created successfully', 201);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to create material: ' . $e->getMessage(), 500);
+        }
     }
 
     public function show(Request $request, $id)
@@ -61,26 +76,19 @@ class MaterialController extends Controller
         $query = $this->applyProductVisibility($query, $request);
         $material = $query->findOrFail($id);
 
-        $data = $request->validate([
-            'materialName' => 'sometimes|string',
-            'categoryId' => 'sometimes|exists:categories,id',
-            'subcategoryId' => 'nullable|exists:subcategories,id',
-            'price' => 'sometimes|numeric|min:0',
-            'totalQuantity' => 'sometimes|integer|min:0',
-            'assignedQuantity' => 'sometimes|integer|min:0',
-            'description' => 'nullable|string',
-            'status' => 'nullable|in:Active,Inactive',
-            'uses' => 'nullable|integer|min:0',
-            'supplierId' => 'nullable|exists:suppliers,id',
-        ]);
+        $data = $request->only(['materialName','categoryId','subcategoryId','price','totalQuantity','assignedQuantity','description','status','uses','supplierId']);
         if (isset($data['materialName'])) { $data['material_name'] = $data['materialName']; unset($data['materialName']); }
         if (isset($data['categoryId'])) { $data['category_id'] = $data['categoryId']; unset($data['categoryId']); }
         if (isset($data['subcategoryId'])) { $data['subcategory_id'] = $data['subcategoryId']; unset($data['subcategoryId']); }
         if (isset($data['totalQuantity'])) { $data['total_quantity'] = $data['totalQuantity']; unset($data['totalQuantity']); }
         if (isset($data['assignedQuantity'])) { $data['assigned_quantity'] = $data['assignedQuantity']; unset($data['assignedQuantity']); }
         if (isset($data['supplierId'])) { $data['supplier_id'] = $data['supplierId']; unset($data['supplierId']); }
-        $material->update($data);
-        return $this->successResponse($material, 'Material updated successfully');
+        try {
+            $material->update($data);
+            return $this->successResponse($material, 'Material updated successfully');
+        } catch (\Exception $e) {
+            return $this->successResponse(null, 'Failed to update: ' . $e->getMessage(), 500, false);
+        }
     }
 
     public function destroy(Request $request, $id)
@@ -88,8 +96,12 @@ class MaterialController extends Controller
         $query = Material::where('company_id', $request->company_id);
         $query = $this->applyProductVisibility($query, $request);
         $material = $query->findOrFail($id);
-        $material->delete();
-        return $this->successResponse(null, 'Material deleted successfully');
+        try {
+            $material->delete();
+            return $this->successResponse(null, 'Material deleted');
+        } catch (\Exception $e) {
+            return $this->successResponse(null, 'Failed to delete: ' . $e->getMessage(), 500, false);
+        }
     }
 
     public function worker(Request $request)
@@ -101,23 +113,16 @@ class MaterialController extends Controller
     public function remaining(Request $request, $id)
     {
         $material = Material::where('company_id', $request->company_id)->findOrFail($id);
-        $remaining = $material->total_quantity - $material->assigned_quantity;
-        return $this->successResponse(['remaining' => $remaining]);
+        return $this->successResponse(['remaining' => $material->total_quantity - $material->assigned_quantity]);
     }
 
-    /**
-     * Products visible to distributor: created by them OR from their linked supplier.
-     */
     private function applyProductVisibility($query, Request $request)
     {
         $user = $request->auth_user;
         if (!$user || in_array($user->role, ['superadmin', 'admin'])) return $query;
         if ($user->role !== 'distributor') return $query->where('user_id', $user->id);
-
-        // Get distributor's supplier_id
         $distributor = \App\Models\Material\Distributor::find($user->distributor_id);
         $supplierId = $distributor?->supplier_id;
-
         return $query->where(function ($q) use ($user, $supplierId) {
             $q->where('user_id', $user->id);
             if ($supplierId) $q->orWhere('supplier_id', $supplierId);

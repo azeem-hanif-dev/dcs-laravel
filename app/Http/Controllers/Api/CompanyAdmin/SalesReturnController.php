@@ -20,6 +20,14 @@ class SalesReturnController extends Controller
             ->with(['shop', 'salesOrder', 'items.product']);
         // SalesReturn → Shop → Salesman → distributor_id
         $query = $this->applyDistributorThroughScope($query, $request, 'shop.salesman');
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('return_number', 'like', "%{$s}%")
+                  ->orWhereHas('shop', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Sales returns retrieved');
     }

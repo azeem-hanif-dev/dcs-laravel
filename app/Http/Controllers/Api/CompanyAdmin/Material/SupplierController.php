@@ -16,6 +16,14 @@ class SupplierController extends Controller
     {
         $query = Supplier::where('company_id', $request->company_id);
         $query = $this->applySupplierVisibility($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")
+                  ->orWhere('email', 'like', "%{$s}%")
+                  ->orWhere('company_name', 'like', "%{$s}%");
+            });
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Suppliers retrieved');
     }

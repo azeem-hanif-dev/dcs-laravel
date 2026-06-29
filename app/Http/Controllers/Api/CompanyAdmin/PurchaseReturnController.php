@@ -18,6 +18,14 @@ class PurchaseReturnController extends Controller
         $query = PurchaseReturn::where('company_id', $request->company_id)
             ->with(['supplier', 'purchaseOrder', 'items.product']);
         $query = $this->applyVisibility($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('return_number', 'like', "%{$s}%")
+                  ->orWhereHas('supplier', fn($sq) => $sq->where('name', 'like', "%{$s}%"));
+            });
+        }
+        if ($request->status) $query->where('status', $request->status);
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Purchase returns retrieved');
     }

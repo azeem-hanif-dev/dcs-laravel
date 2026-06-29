@@ -17,6 +17,12 @@ class SalesmanController extends Controller
         $query = Salesman::where('company_id', $request->company_id)->with('distributor');
         // Salesmen linked via distributor_id — use distributor scope
         $query = $this->applyDistributorScope($query, $request);
+        if ($request->search) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('name', 'like', "%{$s}%")->orWhere('territory', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+            });
+        }
         $query->latest();
         return $this->paginatedResponse($query, $request, 'Salesmen retrieved');
     }
